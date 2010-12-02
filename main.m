@@ -66,7 +66,7 @@ static void TestDevNull(void)
     WaitFor(^int { return didRead; });
 }
 
-int main (int argc, const char * argv[])
+int main(int argc, const char **argv)
 {
     WithPool(^{
         TEST(TestDevNull);
