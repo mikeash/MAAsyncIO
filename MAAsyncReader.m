@@ -82,7 +82,7 @@
 
 - (void)readBytes: (NSUInteger)bytes callback: (MAReadCallback)callbackBlock
 {
-    [self readUntilCondition: ^(NSData *buffer) { return [buffer length] >= bytes ? bytes : 0; }
+    [self readUntilCondition: ^(NSData *buffer) { return [buffer length] >= bytes ? bytes : NSNotFound; }
                     callback: callbackBlock];
 }
 
@@ -90,7 +90,7 @@
 {
     [self readUntilCondition: ^(NSData *buffer) {
         NSRange r = [buffer rangeOfData: data options: 0 range: NSMakeRange(0, [buffer length])];
-        return r.location == NSNotFound ? 0 : r.location;
+        return r.location == NSNotFound ? NSNotFound : r.location;
     }
                     callback: callbackBlock];
 }
@@ -137,7 +137,7 @@
 - (void)_checkCondition
 {
     NSUInteger loc = _condition(_buffer);
-    if(loc)
+    if(loc != NSNotFound)
     {
         _reading = NO;
         dispatch_suspend(_source);

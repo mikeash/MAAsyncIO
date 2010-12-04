@@ -37,7 +37,7 @@ typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before c
 
 // reading
 // condition should return byte index to chop data to pass to callback, or
-// return 0 for "keep reading"
+// return NSNotFound for "keep reading"
 - (void)readUntilCondition: (NSUInteger (^)(NSData *buffer))condBlock
                   callback: (MAReadCallback)callbackBlock;
 

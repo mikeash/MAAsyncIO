@@ -74,7 +74,7 @@ static void TestDevNull(void)
     MAAsyncReader *reader = Reader(fd);
     
     __block BOOL didRead = NO;
-    [reader readUntilCondition: ^NSUInteger (NSData *buffer) { return 0; }
+    [reader readUntilCondition: ^NSUInteger (NSData *buffer) { return NSNotFound; }
                       callback: ^(NSData *data) {
                           TEST_ASSERT(!data);
                           didRead = YES;
@@ -105,7 +105,12 @@ static void TestPipe(void)
             [reader readBytes: 1 callback: ^(NSData *data) {
                 [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
                     TEST_ASSERT([data isEqualToData: d3]);
-                    done = YES;
+                    [reader readBytes: 2 callback: ^(NSData *data) {
+                        [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
+                            TEST_ASSERT(data && [data length] == 0);
+                            done = YES;
+                        }];
+                    }];
                 }];
             }];
         }];
@@ -116,6 +121,7 @@ static void TestPipe(void)
         WriteAll(writeFD, [d2 bytes], [d2 length]);
         WriteAll(writeFD, "\n", 1);
         WriteAll(writeFD, [d3 bytes], [d3 length]);
+        WriteAll(writeFD, "\r\n", 2);
         WriteAll(writeFD, "\r\n", 2);
         close(writeFD);
     });
