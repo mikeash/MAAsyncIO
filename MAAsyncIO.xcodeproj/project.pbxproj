@@ -11,6 +11,7 @@
 		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		C27C0A1D12A7314C00FAE8E6 /* MAAsyncReader.m in Sources */ = {isa = PBXBuildFile; fileRef = C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */; };
 		C2D3956412A9DAA30058481D /* MAFDSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3956312A9DAA30058481D /* MAFDSource.m */; };
+		C2D3959F12A9DD050058481D /* MAAsyncWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3959E12A9DD050058481D /* MAAsyncWriter.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -33,6 +34,8 @@
 		C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncReader.m; sourceTree = "<group>"; };
 		C2D3956212A9DAA30058481D /* MAFDSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAFDSource.h; sourceTree = "<group>"; };
 		C2D3956312A9DAA30058481D /* MAFDSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAFDSource.m; sourceTree = "<group>"; };
+		C2D3959D12A9DD050058481D /* MAAsyncWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncWriter.h; sourceTree = "<group>"; };
+		C2D3959E12A9DD050058481D /* MAAsyncWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncWriter.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +68,8 @@
 				C2D3956312A9DAA30058481D /* MAFDSource.m */,
 				C27C0A1B12A7314C00FAE8E6 /* MAAsyncReader.h */,
 				C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */,
+				C2D3959D12A9DD050058481D /* MAAsyncWriter.h */,
+				C2D3959E12A9DD050058481D /* MAAsyncWriter.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -138,6 +143,7 @@
 				8DD76F9A0486AA7600D96B5E /* main.m in Sources */,
 				C27C0A1D12A7314C00FAE8E6 /* MAAsyncReader.m in Sources */,
 				C2D3956412A9DAA30058481D /* MAFDSource.m in Sources */,
+				C2D3959F12A9DD050058481D /* MAAsyncWriter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

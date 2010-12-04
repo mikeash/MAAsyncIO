@@ -16,7 +16,7 @@
     int _fd;
 }
 
-- (id)initWithFileDescriptor: (int)fd; // takes ownership of fd
+- (id)initWithFileDescriptor: (int)fd type: (dispatch_source_type_t)type; // takes ownership of fd
 
 - (void)setEventCallback: (dispatch_block_t)block;
 - (void)setTargetQueue: (dispatch_queue_t)queue;

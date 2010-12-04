@@ -11,13 +11,13 @@
 
 @implementation MAFDSource
 
-- (id)initWithFileDescriptor: (int)fd
+- (id)initWithFileDescriptor: (int)fd type: (dispatch_source_type_t)type
 {
     if((self = [self init]))
     {
         _queue = dispatch_queue_create("com.mikeash.MAAsyncReader", NULL);
         
-        _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, _queue);
+        _source = dispatch_source_create(type, fd, 0, _queue);
         dispatch_source_set_cancel_handler(_source, ^{ close(fd); });
         
         _fd = fd;

@@ -24,7 +24,7 @@
 {
     if((self = [self init]))
     {
-        _fdSource = [[MAFDSource alloc] initWithFileDescriptor: fd];
+        _fdSource = [[MAFDSource alloc] initWithFileDescriptor: fd type: DISPATCH_SOURCE_TYPE_READ];
         _fd = fd;
         
         __block MAAsyncReader *weakSelf = self;
