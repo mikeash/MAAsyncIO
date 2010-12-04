@@ -22,8 +22,7 @@
 {
     if((self = [self init]))
     {
-        _queue = dispatch_get_global_queue(0, 0);
-        dispatch_retain(_queue);
+        _queue = dispatch_queue_create("com.mikeash.MAAsyncReader", NULL);
         
         _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, _queue);
         dispatch_source_set_cancel_handler(_source, ^{ close(fd); });
@@ -48,6 +47,7 @@
     [_errorHandler release];
     [_condition release];
     [_readCallback release];
+    dispatch_release(_queue);
     
     [super dealloc];
 }
@@ -61,13 +61,7 @@
 
 - (void)setQueue: (dispatch_queue_t)queue
 {
-    NSAssert(!_reading, @"Can't change MAAsyncReader queue while a read is pending");
-    
-    dispatch_retain(queue);
-    dispatch_release(_queue);
-    _queue = queue;
-    
-    dispatch_set_target_queue(_source, _queue);
+    dispatch_set_target_queue(_queue, queue);
 }
 
 - (void)readUntilCondition: (NSUInteger (^)(NSData *buffer))condBlock
