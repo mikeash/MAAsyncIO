@@ -36,11 +36,7 @@
 
 - (void)dealloc
 {
-    [_fdSource release];
-    [_buffer release];
-    [_errorHandler release];
-    [_didWriteCallback release];
-    [_eofCallback release];
+    [self invalidate];
     
     [super dealloc];
 }
@@ -94,6 +90,21 @@
 - (void)invalidate
 {
     [_fdSource invalidate];
+    
+    [_fdSource release];
+    _fdSource = nil;
+    
+    [_buffer release];
+    _buffer = nil;
+    
+    [_errorHandler release];
+    _errorHandler = nil;
+    
+    [_didWriteCallback release];
+    _didWriteCallback = nil;
+    
+    [_eofCallback release];
+    _eofCallback = nil;
 }
 
 - (void)_write
