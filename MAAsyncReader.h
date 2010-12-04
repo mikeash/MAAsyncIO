@@ -11,10 +11,11 @@
 
 typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before condition met
 
+@class MAFDSource;
+
 @interface MAAsyncReader : NSObject
 {
-    dispatch_source_t _source;
-    dispatch_queue_t _queue;
+    MAFDSource *_fdSource;
     int _fd;
     
     BOOL _reading;
@@ -33,7 +34,7 @@ typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before c
 
 // setup
 - (void)setErrorHandler: (void (^)(int err))handlerBlock;
-- (void)setQueue: (dispatch_queue_t)queue; // default is normal global queue
+- (void)setTargetQueue: (dispatch_queue_t)queue; // default is normal global queue
 
 // reading
 // condition should return byte index to chop data to pass to callback, or

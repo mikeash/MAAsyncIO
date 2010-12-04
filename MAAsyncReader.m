@@ -8,6 +8,8 @@
 
 #import "MAAsyncReader.h"
 
+#import "MAFDSource.h"
+
 
 @interface MAAsyncReader ()
 
@@ -22,17 +24,11 @@
 {
     if((self = [self init]))
     {
-        _queue = dispatch_queue_create("com.mikeash.MAAsyncReader", NULL);
-        
-        _source = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, _queue);
-        dispatch_source_set_cancel_handler(_source, ^{ close(fd); });
-        
+        _fdSource = [[MAFDSource alloc] initWithFileDescriptor: fd];
         _fd = fd;
-        int flags = fcntl(_fd, F_GETFL, 0);
-        fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
         
         __block MAAsyncReader *weakSelf = self;
-        dispatch_source_set_event_handler(_source, ^{ [weakSelf _read]; });
+        [_fdSource setEventCallback: ^{ [weakSelf _read]; }];
         
         _buffer = [[NSMutableData alloc] init];
     }
@@ -41,13 +37,11 @@
 
 - (void)dealloc
 {
-    [self invalidate];
-    
+    [_fdSource release];
     [_buffer release];
     [_errorHandler release];
     [_condition release];
     [_readCallback release];
-    dispatch_release(_queue);
     
     [super dealloc];
 }
@@ -59,9 +53,9 @@
     _errorHandler = handlerBlock;
 }
 
-- (void)setQueue: (dispatch_queue_t)queue
+- (void)setTargetQueue: (dispatch_queue_t)queue
 {
-    dispatch_set_target_queue(_queue, queue);
+    [_fdSource setTargetQueue: queue];
 }
 
 - (void)readUntilCondition: (NSUInteger (^)(NSData *buffer))condBlock
@@ -74,8 +68,8 @@
     _condition = [condBlock copy];
     _readCallback = [callbackBlock copy];
     
-    dispatch_async(_queue, ^{
-        dispatch_resume(_source);
+    dispatch_async([_fdSource queue], ^{
+        [_fdSource resume];
         [self _checkCondition];
     });
 }
@@ -102,14 +96,12 @@
 
 - (void)invalidate
 {
-    dispatch_sync(_queue, ^{
-        dispatch_source_cancel(_source);
-    });
+    [_fdSource invalidate];
 }
 
 - (void)_read
 {
-    NSUInteger howmuch = dispatch_source_get_data(_source);
+    NSUInteger howmuch = [_fdSource bytesAvailable];
     howmuch = MAX(howmuch, 128U); // read no less than 128 bytes
     howmuch = MIN(howmuch, 8192U); // read no more than 8kB
     
@@ -140,7 +132,7 @@
     if(loc != NSNotFound)
     {
         _reading = NO;
-        dispatch_suspend(_source);
+        [_fdSource suspend];
         
         NSRange r = NSMakeRange(0, loc);
         NSData *chunk = [_buffer subdataWithRange: r];
