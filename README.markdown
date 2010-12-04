@@ -59,4 +59,6 @@ As stated above, MAAsyncIO is a work in progress. In particular, the following a
 
 - This sort of async IO is especially useful when dealing with sockets. Helpers for creating a connected socket or listening on a port should be created that can automatically return reader/writer pairs.
 
+- Everything needs more and better tests.
+
 I plan to gradually work on these, but help is always appreciated.
