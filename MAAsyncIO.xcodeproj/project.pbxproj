@@ -36,6 +36,8 @@
 		C2D3956312A9DAA30058481D /* MAFDSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAFDSource.m; sourceTree = "<group>"; };
 		C2D3959D12A9DD050058481D /* MAAsyncWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncWriter.h; sourceTree = "<group>"; };
 		C2D3959E12A9DD050058481D /* MAAsyncWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncWriter.m; sourceTree = "<group>"; };
+		C2D395E712A9E4890058481D /* README.markdown */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.markdown; sourceTree = "<group>"; };
+		C2D3960412A9EA140058481D /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +55,8 @@
 		08FB7794FE84155DC02AAC07 /* MAAsyncIO */ = {
 			isa = PBXGroup;
 			children = (
+				C2D3960412A9EA140058481D /* LICENSE */,
+				C2D395E712A9E4890058481D /* README.markdown */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				08FB779DFE84155DC02AAC07 /* External Frameworks and Libraries */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,

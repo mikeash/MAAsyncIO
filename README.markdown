@@ -1,0 +1,62 @@
+MAAsyncIO
+---------
+
+MAAsyncIO is a wrapper around Grand Central Dispatch file descriptor sources. It's still a work in progress. Please feel free to make additions or requests.
+
+MAAsyncIO is distributed under a BSD license, which can be found in the LICENSE file.
+
+
+Reading
+-------
+
+`MAAsyncReader` handles reading. Create one using `initWithFileDescriptor:`. Optionally set an error handler and a target queue.
+
+The basic reading method is `readUntilCondition:callback:`. This reads data from the file descriptor into a buffer. Each time it reads, the condition block is invoked. If the condition block returns a byte index, that much data is sliced off the buffer and the callback is called with that chunk of data. If the condition block returns `NSNotFound`, then it keeps reading.
+
+Several convenience methods are implemented on top of this. The `readBytes:callback:` method reads exactly the number of bytes requested, and passes them to the callback. `readUntilData:callback:` reads until the provided data is found within the buffer, and gives the callback everything that was found up to that point. `readUntilCString:callback:` does the same, except the data is provided as a C string.
+
+As an example, here's how you could read one line from a file:
+
+    MAAsyncReader *reader = [[MAAsyncReader alloc] initWithFileDescriptor: someFD];
+    [reader readUntilCString: "\n" callback: ^(NSData *lineData) {
+        [reader readBytes: 1 callback: ^{ // read the newline too
+            // do something with 'line'
+        }];
+    }];
+
+This is all done completely asynchronously and nonblocking. By default, the "do something" code will run on the global dispatch queue, meaning it runs in the background and concurrently. By using `setTargetQueue:`, you can make it run on the dispatch queue of your choice, including the main thread.
+
+
+Writing
+-------
+
+`MAAsyncWriter` handles writing. As with the reader, you create one with `initWithFileDescriptor:` and optionally set an error handler and target queue.
+
+You can call `writeData:` and `writeCString:` as much as you want. The data so written is appended to a buffer, and that buffer is then written to the file descriptor as needed.
+
+If you wish to regulate the rate at which data is written, you can use the write callback and the `-bufferSize` method. For example, here's how you could fetch or generate new data to write any time the buffer drops below 4kB of data:
+
+    MAAsyncWriter *writer = [[MAAsyncWriter alloc] initWithFileDescriptor: someFD];
+    [writer setDidWriteCallback: ^{
+        if([writer bufferSize] < 4096)
+            [writer writeData: [self _generateMoreData]];
+    }];
+    
+    // get the ball rolling
+    [writer writeData: [self _generateMoreData]];
+
+
+Work In Progress
+----------------
+
+As stated above, MAAsyncIO is a work in progress. In particular, the following areas are deficient:
+
+- Having to manually read past a delimeter (e.g. a newline) after reading up to it is annoying. The API should make it possible to do both in one chunk. Possibly the condition callback could return two values, one specifying the data to present to the read callback, and one specifying how much data to actually chop.
+
+- The reader has no buffer limits, so it can go forever if the data never meets the conditions.
+
+- Both the reader and the writer take ownership of their file descriptor, which is not always wanted. This should be made optional.
+
+- This sort of async IO is especially useful when dealing with sockets. Helpers for creating a connected socket or listening on a port should be created that can automatically return reader/writer pairs.
+
+I plan to gradually work on these, but help is always appreciated.
