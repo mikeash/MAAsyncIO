@@ -126,23 +126,39 @@
     }
 }
 
+- (void)_fireReadCallback: (NSData *)data
+{
+    // a fancy dance so that the callback can set up a new callback without breaking everything
+    MAReadCallback localReadCallback = _readCallback;
+    _readCallback = nil;
+    
+    [_condition release];
+    _condition = nil;
+    
+    localReadCallback(data);
+    [localReadCallback release];
+}
+
 - (void)_checkCondition
 {
-    NSUInteger loc = _condition(_buffer);
-    if(loc != NSNotFound)
+    if(_condition)
     {
-        _reading = NO;
-        [_fdSource suspend];
-        
-        NSRange r = NSMakeRange(0, loc);
-        NSData *chunk = [_buffer subdataWithRange: r];
-        [_buffer replaceBytesInRange: r withBytes: NULL length: 0];
-        
-        _readCallback(chunk);
-    }
-    else if(_isEOF)
-    {
-        _readCallback(nil);
+        NSUInteger loc = _condition(_buffer);
+        if(loc != NSNotFound)
+        {
+            _reading = NO;
+            [_fdSource suspend];
+            
+            NSRange r = NSMakeRange(0, loc);
+            NSData *chunk = [_buffer subdataWithRange: r];
+            [_buffer replaceBytesInRange: r withBytes: NULL length: 0];
+            
+            [self _fireReadCallback: chunk];
+        }
+        else if(_isEOF)
+        {
+            [self _fireReadCallback: nil];
+        }
     }
 }
 
