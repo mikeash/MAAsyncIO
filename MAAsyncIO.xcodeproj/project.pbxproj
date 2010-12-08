@@ -16,6 +16,7 @@
 		C2D3994A12AFFF7C0058481D /* MAAsyncHost.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3994912AFFF7C0058481D /* MAAsyncHost.m */; };
 		C2D39A0C12B0019F0058481D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2D39A0B12B0019F0058481D /* CoreServices.framework */; };
 		C2D39AC512B00A820058481D /* MAAsyncSocketUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D39AC412B00A820058481D /* MAAsyncSocketUtils.m */; };
+		C2D39D8F12B03A630058481D /* MAAsyncSocketListener.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D39D8E12B03A630058481D /* MAAsyncSocketListener.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -49,6 +50,8 @@
 		C2D39A0B12B0019F0058481D /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		C2D39AC312B00A820058481D /* MAAsyncSocketUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncSocketUtils.h; sourceTree = "<group>"; };
 		C2D39AC412B00A820058481D /* MAAsyncSocketUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncSocketUtils.m; sourceTree = "<group>"; };
+		C2D39D8D12B03A630058481D /* MAAsyncSocketListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncSocketListener.h; sourceTree = "<group>"; };
+		C2D39D8E12B03A630058481D /* MAAsyncSocketListener.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncSocketListener.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -88,6 +91,8 @@
 				C2D3994912AFFF7C0058481D /* MAAsyncHost.m */,
 				C2D39AC312B00A820058481D /* MAAsyncSocketUtils.h */,
 				C2D39AC412B00A820058481D /* MAAsyncSocketUtils.m */,
+				C2D39D8D12B03A630058481D /* MAAsyncSocketListener.h */,
+				C2D39D8E12B03A630058481D /* MAAsyncSocketListener.m */,
 				C2D3956212A9DAA30058481D /* MAFDSource.h */,
 				C2D3956312A9DAA30058481D /* MAFDSource.m */,
 				C2BB084612AF1AEB00BC232D /* MAFDRefcount.h */,
@@ -170,6 +175,7 @@
 				C2BB084812AF1AEB00BC232D /* MAFDRefcount.m in Sources */,
 				C2D3994A12AFFF7C0058481D /* MAAsyncHost.m in Sources */,
 				C2D39AC512B00A820058481D /* MAAsyncSocketUtils.m in Sources */,
+				C2D39D8F12B03A630058481D /* MAAsyncSocketListener.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

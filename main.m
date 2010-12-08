@@ -6,6 +6,7 @@
 #import "MAAsyncReader.h"
 #import "MAAsyncWriter.h"
 #import "MAFDRefcount.h"
+#import "MAAsyncSocketListener.h"
 #import "MAAsyncSocketUtils.h"
 
 
@@ -172,7 +173,7 @@ static void TestHost(void)
     TEST_ASSERT(WaitFor(^int { return done2; }));
 }
 
-static void TestSocket(void)
+static void TestSocketConnect(void)
 {
     __block BOOL done = NO;
     [[MAAsyncHost hostWithName: @"www.google.com"] resolve: ^(NSArray *addresses, CFStreamError error) {
@@ -192,13 +193,46 @@ static void TestSocket(void)
     TEST_ASSERT(WaitFor(^int { return done; }));
 }
 
+static void TestSocketListen(void)
+{
+    NSError *error;
+    MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(1, 20) tryRandom: YES error: &error];
+    TEST_ASSERT(listener, @"%@", error);
+}
+
+static void TestSocketBoth(void)
+{
+    NSError *error;
+    MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(1, 20) tryRandom: YES error: &error];
+    TEST_ASSERT(listener, @"%@", error);
+    
+    [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
+        [reader readBytes: 1 callback: ^(NSData *data) {
+            TEST_ASSERT(*(const char *)[data bytes] == 'a');
+            [writer writeCString: "b"];
+        }];
+    }];
+    
+    [[MAAsyncHost hostWithName: @"localhost"] resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT([addresses count]);
+        MAAsyncSocketConnect([addresses objectAtIndex: 0], [listener port], ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+            [writer writeCString: "a"];
+            [reader readBytes: 1 callback: ^(NSData *data) {
+                TEST_ASSERT(*(const char *)[data bytes] == 'b');
+            }];
+        });
+    }];
+}
+
 int main(int argc, const char **argv)
 {
     WithPool(^{
         TEST(TestDevNull);
         TEST(TestPipe);
         TEST(TestHost);
-        TEST(TestSocket);
+        TEST(TestSocketConnect);
+        TEST(TestSocketListen);
+        TEST(TestSocketBoth);
         
         NSString *message;
         if(gFailureCount)
