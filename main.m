@@ -1,5 +1,8 @@
 #import <Foundation/Foundation.h>
 
+#import <netdb.h>
+
+#import "MAAsyncHost.h"
 #import "MAAsyncReader.h"
 #import "MAAsyncWriter.h"
 #import "MAFDRefcount.h"
@@ -142,11 +145,33 @@ static void TestPipe(void)
     });
 }
 
+static void TestHost(void)
+{
+    __block BOOL done1 = NO;
+    __block BOOL done2 = NO;
+    [[MAAsyncHost hostWithName: @"localhost"] resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT(addresses);
+        TEST_ASSERT(!error.domain);
+        done1 = YES;
+    }];
+    [[MAAsyncHost hostWithName: @"sdrgaoigdsaeuindthaeuihtedonutidenoscuhdnhe"] resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT(!addresses);
+        TEST_ASSERT(error.domain == kCFStreamErrorDomainNetDB);
+        TEST_ASSERT(error.error == EAI_NONAME);
+        done2 = YES;
+    }];
+    
+    TEST_ASSERT(WaitFor(^int { return done1; }));
+    TEST_ASSERT(WaitFor(^int { return done2; }));
+}
+
 int main(int argc, const char **argv)
 {
     WithPool(^{
         TEST(TestDevNull);
         TEST(TestPipe);
+        TEST(TestHost);
+        
         NSString *message;
         if(gFailureCount)
             message = [NSString stringWithFormat: @"FAILED: %d total assertion failure%s", gFailureCount, gFailureCount > 1 ? "s" : ""];

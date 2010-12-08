@@ -13,6 +13,8 @@
 		C2BB084812AF1AEB00BC232D /* MAFDRefcount.m in Sources */ = {isa = PBXBuildFile; fileRef = C2BB084712AF1AEB00BC232D /* MAFDRefcount.m */; };
 		C2D3956412A9DAA30058481D /* MAFDSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3956312A9DAA30058481D /* MAFDSource.m */; };
 		C2D3959F12A9DD050058481D /* MAAsyncWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3959E12A9DD050058481D /* MAAsyncWriter.m */; };
+		C2D3994A12AFFF7C0058481D /* MAAsyncHost.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3994912AFFF7C0058481D /* MAAsyncHost.m */; };
+		C2D39A0C12B0019F0058481D /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C2D39A0B12B0019F0058481D /* CoreServices.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -41,6 +43,9 @@
 		C2D3959E12A9DD050058481D /* MAAsyncWriter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncWriter.m; sourceTree = "<group>"; };
 		C2D395E712A9E4890058481D /* README.markdown */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.markdown; sourceTree = "<group>"; };
 		C2D3960412A9EA140058481D /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		C2D3994812AFFF7C0058481D /* MAAsyncHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncHost.h; sourceTree = "<group>"; };
+		C2D3994912AFFF7C0058481D /* MAAsyncHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncHost.m; sourceTree = "<group>"; };
+		C2D39A0B12B0019F0058481D /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +54,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */,
+				C2D39A0C12B0019F0058481D /* CoreServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +81,8 @@
 				C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */,
 				C2D3959D12A9DD050058481D /* MAAsyncWriter.h */,
 				C2D3959E12A9DD050058481D /* MAAsyncWriter.m */,
+				C2D3994812AFFF7C0058481D /* MAAsyncHost.h */,
+				C2D3994912AFFF7C0058481D /* MAAsyncHost.m */,
 				C2D3956212A9DAA30058481D /* MAFDSource.h */,
 				C2D3956312A9DAA30058481D /* MAFDSource.m */,
 				C2BB084612AF1AEB00BC232D /* MAFDRefcount.h */,
@@ -87,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				08FB779EFE84155DC02AAC07 /* Foundation.framework */,
+				C2D39A0B12B0019F0058481D /* CoreServices.framework */,
 			);
 			name = "External Frameworks and Libraries";
 			sourceTree = "<group>";
@@ -154,6 +163,7 @@
 				C2D3956412A9DAA30058481D /* MAFDSource.m in Sources */,
 				C2D3959F12A9DD050058481D /* MAAsyncWriter.m in Sources */,
 				C2BB084812AF1AEB00BC232D /* MAFDRefcount.m in Sources */,
+				C2D3994A12AFFF7C0058481D /* MAAsyncHost.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
