@@ -71,7 +71,13 @@
 - (void)invalidate
 {
     dispatch_sync(_queue, ^{
-        dispatch_source_cancel(_source);
+        if(_source)
+        {
+            dispatch_resume(_source);
+            dispatch_source_cancel(_source);
+            dispatch_release(_source);
+            _source = NULL;
+        }
     });
 }
 
