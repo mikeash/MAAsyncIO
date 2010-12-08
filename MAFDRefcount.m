@@ -45,7 +45,7 @@ int MAFDRetain(int fd)
 {
     Init();
     
-    dispatch_async(gQueue, ^{
+    dispatch_sync(gQueue, ^{
         SetRefcount(fd, GetRefcount(fd) + 1);
     });
     
@@ -54,7 +54,7 @@ int MAFDRetain(int fd)
 
 void MAFDRelease(int fd)
 {
-    dispatch_async(gQueue, ^{
+    dispatch_sync(gQueue, ^{
         int count = GetRefcount(fd);
         if(count == 1)
             Destroy(fd);
