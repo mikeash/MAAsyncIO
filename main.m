@@ -182,6 +182,9 @@ static void TestSocket(void)
             [writer writeCString: "GET /\n\n"];
             [reader readBytes: 1 callback: ^(NSData *data) {
                 done = YES;
+                
+                [reader self];
+                [writer self];
             }];
         });
     }];

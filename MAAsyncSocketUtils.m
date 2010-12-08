@@ -50,6 +50,8 @@ void MAAsyncSocketConnect(NSData *address, int port, void (^block)(MAAsyncReader
                 MAAsyncReader *reader = [[MAAsyncReader alloc] initWithFileDescriptor: fd];
                 MAAsyncWriter *writer = [[MAAsyncWriter alloc] initWithFileDescriptor: fd];
                 block(reader, writer, nil);
+                [reader release];
+                [writer release];
             }
             [source release];
         };

@@ -37,6 +37,7 @@
         [self performSelector: @selector(_resolutionGetRunloop:) onThread: thread withObject: runloopArray waitUntilDone: YES];
         runloop = (CFRunLoopRef)[runloopArray lastObject];
         CFRetain(runloop);
+        [thread release];
     });
     return runloop;
 }
