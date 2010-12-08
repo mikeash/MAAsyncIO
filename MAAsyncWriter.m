@@ -132,7 +132,8 @@
                 _didWriteCallback();
         }
     }
-    else
+    
+    if(![_buffer length])
         [_fdSource suspend];
 }
 
