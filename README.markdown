@@ -46,6 +46,31 @@ If you wish to regulate the rate at which data is written, you can use the write
     [writer writeData: [self _generateMoreData]];
 
 
+Descriptor Management
+---------------------
+
+File descriptors are managed using a reference counting scheme similar to that used by Cocoa for memory management.
+
+The `MAFDRetain` function increments the reference count of a file descriptor. The `MAFDRelease` function decrements the reference count, and closes the file descriptor if it reaches zero. File descriptors are considered to be created with a reference count of `1`. `MAAsyncReader` and `MAAsyncWriter` will retain their file descriptors while working on them, and release them when done.
+
+Here's an example of how to properly use these functions:
+
+    int fd = open(...); // implicit retain count of 1
+    MAAsyncReader *reader = [[MAAsyncReader alloc] initWithFileDescriptor: fd];
+    MAFDRelease(fd);
+    
+    // now use reader
+
+These semantics make it possible to share an fd among multiple objects, so that you can have a reader and a writer both pointing at the same file descriptor:
+
+    int fd = open(...); // implicit retain count of 1
+    MAAsyncReader *reader = [[MAAsyncReader alloc] initWithFileDescriptor: fd];
+    MAAsyncWriter *writer = [[MAAsyncWriter alloc] initWithFileDescriptor: fd];
+    MAFDRelease(fd);
+    
+    // now use reader and writer
+
+
 Work In Progress
 ----------------
 
@@ -54,8 +79,6 @@ As stated above, MAAsyncIO is a work in progress. In particular, the following a
 - Having to manually read past a delimeter (e.g. a newline) after reading up to it is annoying. The API should make it possible to do both in one chunk. Possibly the condition callback could return two values, one specifying the data to present to the read callback, and one specifying how much data to actually chop.
 
 - The reader has no buffer limits, so it can go forever if the data never meets the conditions.
-
-- Both the reader and the writer take ownership of their file descriptor, which is not always wanted. This should be made optional.
 
 - This sort of async IO is especially useful when dealing with sockets. Helpers for creating a connected socket or listening on a port should be created that can automatically return reader/writer pairs.
 
