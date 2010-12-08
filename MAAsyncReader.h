@@ -30,7 +30,7 @@ typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before c
 }
 
 // initialization
-- (id)initWithFileDescriptor: (int)fd; // takes ownership of fd, sets it nonblocking
+- (id)initWithFileDescriptor: (int)fd; // sets fd nonblocking, uses MAFDRetain/MAFDRelease to manage it
 
 // setup
 - (void)setErrorHandler: (void (^)(int err))handlerBlock;

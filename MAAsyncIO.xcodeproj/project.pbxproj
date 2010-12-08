@@ -10,6 +10,7 @@
 		8DD76F9A0486AA7600D96B5E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		C27C0A1D12A7314C00FAE8E6 /* MAAsyncReader.m in Sources */ = {isa = PBXBuildFile; fileRef = C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */; };
+		C2BB084812AF1AEB00BC232D /* MAFDRefcount.m in Sources */ = {isa = PBXBuildFile; fileRef = C2BB084712AF1AEB00BC232D /* MAFDRefcount.m */; };
 		C2D3956412A9DAA30058481D /* MAFDSource.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3956312A9DAA30058481D /* MAFDSource.m */; };
 		C2D3959F12A9DD050058481D /* MAAsyncWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = C2D3959E12A9DD050058481D /* MAAsyncWriter.m */; };
 /* End PBXBuildFile section */
@@ -32,6 +33,8 @@
 		8DD76FA10486AA7600D96B5E /* MAAsyncIO */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MAAsyncIO; sourceTree = BUILT_PRODUCTS_DIR; };
 		C27C0A1B12A7314C00FAE8E6 /* MAAsyncReader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncReader.h; sourceTree = "<group>"; };
 		C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAAsyncReader.m; sourceTree = "<group>"; };
+		C2BB084612AF1AEB00BC232D /* MAFDRefcount.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAFDRefcount.h; sourceTree = "<group>"; };
+		C2BB084712AF1AEB00BC232D /* MAFDRefcount.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAFDRefcount.m; sourceTree = "<group>"; };
 		C2D3956212A9DAA30058481D /* MAFDSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAFDSource.h; sourceTree = "<group>"; };
 		C2D3956312A9DAA30058481D /* MAFDSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MAFDSource.m; sourceTree = "<group>"; };
 		C2D3959D12A9DD050058481D /* MAAsyncWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MAAsyncWriter.h; sourceTree = "<group>"; };
@@ -74,6 +77,8 @@
 				C27C0A1C12A7314C00FAE8E6 /* MAAsyncReader.m */,
 				C2D3959D12A9DD050058481D /* MAAsyncWriter.h */,
 				C2D3959E12A9DD050058481D /* MAAsyncWriter.m */,
+				C2BB084612AF1AEB00BC232D /* MAFDRefcount.h */,
+				C2BB084712AF1AEB00BC232D /* MAFDRefcount.m */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -148,6 +153,7 @@
 				C27C0A1D12A7314C00FAE8E6 /* MAAsyncReader.m in Sources */,
 				C2D3956412A9DAA30058481D /* MAFDSource.m in Sources */,
 				C2D3959F12A9DD050058481D /* MAAsyncWriter.m in Sources */,
+				C2BB084812AF1AEB00BC232D /* MAFDRefcount.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

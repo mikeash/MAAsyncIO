@@ -8,6 +8,8 @@
 
 #import "MAFDSource.h"
 
+#import "MAFDRefcount.h"
+
 
 @implementation MAFDSource
 
@@ -17,10 +19,11 @@
     {
         _queue = dispatch_queue_create("com.mikeash.MAAsyncReader", NULL);
         
-        _source = dispatch_source_create(type, fd, 0, _queue);
-        dispatch_source_set_cancel_handler(_source, ^{ close(fd); });
+        _fd = MAFDRetain(fd);
         
-        _fd = fd;
+        _source = dispatch_source_create(type, fd, 0, _queue);
+        dispatch_source_set_cancel_handler(_source, ^{ MAFDRelease(fd); });
+        
         int flags = fcntl(_fd, F_GETFL, 0);
         fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
     }

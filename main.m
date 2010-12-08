@@ -2,6 +2,7 @@
 
 #import "MAAsyncReader.h"
 #import "MAAsyncWriter.h"
+#import "MAFDRefcount.h"
 
 
 static void WithPool(void (^block)(void))
@@ -81,6 +82,9 @@ static void WithPipe(void (^block)(MAAsyncReader *reader, MAAsyncWriter *writer)
     MAAsyncReader *reader = Reader(readFD);
     MAAsyncWriter *writer = Writer(writeFD);
     
+    MAFDRelease(readFD);
+    MAFDRelease(writeFD);
+    
     block(reader, writer);
 }
 
@@ -89,6 +93,7 @@ static void TestDevNull(void)
     int fd = open("/dev/null", O_RDONLY);
     
     MAAsyncReader *reader = Reader(fd);
+    MAFDRelease(fd);
     
     __block BOOL didRead = NO;
     [reader readUntilCondition: ^NSUInteger (NSData *buffer) { return NSNotFound; }
