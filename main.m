@@ -103,7 +103,7 @@ static void TestDevNull(void)
             MAFDRelease(fd);
             
             __block BOOL didRead = NO;
-            [reader readUntilCondition: ^NSUInteger (NSData *buffer) { return NSNotFound; }
+            [reader readUntilCondition: ^NSRange (NSData *buffer) { return MAKeepReading; }
                               callback: ^(NSData *data) {
                                   TEST_ASSERT(!data);
                                   didRead = YES;
@@ -127,15 +127,11 @@ static void TestPipe(void)
                     TEST_ASSERT([data isEqualToData: d1]);
                     [reader readUntilCString: "\n" callback: ^(NSData *data) {
                         TEST_ASSERT([data isEqualToData: d2]);
-                        [reader readBytes: 1 callback: ^(NSData *data) {
+                        [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
+                            TEST_ASSERT([data isEqualToData: d3]);
                             [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
-                                TEST_ASSERT([data isEqualToData: d3]);
-                                [reader readBytes: 2 callback: ^(NSData *data) {
-                                    [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
-                                        TEST_ASSERT(data && [data length] == 0);
-                                        done = YES;
-                                    }];
-                                }];
+                                TEST_ASSERT(data && [data length] == 0);
+                                done = YES;
                             }];
                         }];
                     }];

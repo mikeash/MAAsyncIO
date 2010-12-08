@@ -11,6 +11,8 @@
 #import "MAFDSource.h"
 
 
+const NSRange MAKeepReading = { NSNotFound, 0 };
+
 @interface MAAsyncReader ()
 
 - (void)_read;
@@ -59,7 +61,7 @@
     [_fdSource setTargetQueue: queue];
 }
 
-- (void)readUntilCondition: (NSUInteger (^)(NSData *buffer))condBlock
+- (void)readUntilCondition: (NSRange (^)(NSData *buffer))condBlock
                   callback: (MAReadCallback)callbackBlock
 {
     NSAssert(!_reading, @"Can't start a MAAsyncReader read while a read is already pending");
@@ -77,15 +79,14 @@
 
 - (void)readBytes: (NSUInteger)bytes callback: (MAReadCallback)callbackBlock
 {
-    [self readUntilCondition: ^(NSData *buffer) { return [buffer length] >= bytes ? bytes : NSNotFound; }
+    [self readUntilCondition: ^(NSData *buffer) { return [buffer length] >= bytes ? NSMakeRange(bytes, 0) : MAKeepReading; }
                     callback: callbackBlock];
 }
 
 - (void)readUntilData: (NSData *)data callback: (MAReadCallback)callbackBlock
 {
     [self readUntilCondition: ^(NSData *buffer) {
-        NSRange r = [buffer rangeOfData: data options: 0 range: NSMakeRange(0, [buffer length])];
-        return r.location == NSNotFound ? NSNotFound : r.location;
+        return [buffer rangeOfData: data options: 0 range: NSMakeRange(0, [buffer length])];
     }
                     callback: callbackBlock];
 }
@@ -144,15 +145,17 @@
 {
     if(_condition)
     {
-        NSUInteger loc = _condition(_buffer);
-        if(loc != NSNotFound)
+        NSRange r = _condition(_buffer);
+        if(r.location != NSNotFound)
         {
             _reading = NO;
             [_fdSource suspend];
             
-            NSRange r = NSMakeRange(0, loc);
-            NSData *chunk = [_buffer subdataWithRange: r];
-            [_buffer replaceBytesInRange: r withBytes: NULL length: 0];
+            NSRange chunkRange = NSMakeRange(0, r.location);
+            NSData *chunk = [_buffer subdataWithRange: chunkRange];
+            
+            NSRange deleteRange = NSMakeRange(0, NSMaxRange(r));
+            [_buffer replaceBytesInRange: deleteRange withBytes: NULL length: 0];
             
             [self _fireReadCallback: chunk];
         }

@@ -25,7 +25,7 @@ typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before c
     
     void (^_errorHandler)(int);
     
-    NSUInteger (^_condition)(NSData *);
+    NSRange (^_condition)(NSData *);
     MAReadCallback _readCallback;
 }
 
@@ -37,9 +37,12 @@ typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before c
 - (void)setTargetQueue: (dispatch_queue_t)queue; // default is normal global queue
 
 // reading
-// condition should return byte index to chop data to pass to callback, or
-// return NSNotFound for "keep reading"
-- (void)readUntilCondition: (NSUInteger (^)(NSData *buffer))condBlock
+// condition returns range of delimeter
+// everything up to range.location is passed to the callback
+// everything within the range is deleted from the buffer
+// return NSNotFound in range.location to signal "keep reading"
+// or use the MAKeepReading constant
+- (void)readUntilCondition: (NSRange (^)(NSData *buffer))condBlock
                   callback: (MAReadCallback)callbackBlock;
 
 - (void)readBytes: (NSUInteger)bytes callback: (MAReadCallback)callbackBlock;
@@ -50,3 +53,5 @@ typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before c
 - (void)invalidate;
 
 @end
+
+extern const NSRange MAKeepReading;
