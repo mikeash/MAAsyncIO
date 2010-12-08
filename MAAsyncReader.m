@@ -37,6 +37,7 @@
 
 - (void)dealloc
 {
+    [_fdSource invalidate];
     [_fdSource release];
     [_buffer release];
     [_errorHandler release];
@@ -157,6 +158,7 @@
         }
         else if(_isEOF)
         {
+            [_fdSource suspend];
             [self _fireReadCallback: nil];
         }
     }
