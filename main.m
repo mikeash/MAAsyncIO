@@ -6,6 +6,7 @@
 #import "MAAsyncReader.h"
 #import "MAAsyncWriter.h"
 #import "MAFDRefcount.h"
+#import "MAAsyncSocketUtils.h"
 
 
 static void WithPool(void (^block)(void))
@@ -165,12 +166,30 @@ static void TestHost(void)
     TEST_ASSERT(WaitFor(^int { return done2; }));
 }
 
+static void TestSocket(void)
+{
+    __block BOOL done = NO;
+    [[MAAsyncHost hostWithName: @"www.google.com"] resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT([addresses count]);
+        NSData *address = [addresses objectAtIndex: 0];
+        MAAsyncSocketConnect(address, 80, ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+            [writer writeCString: "GET /\n\n"];
+            [reader readBytes: 1 callback: ^(NSData *data) {
+                done = YES;
+            }];
+        });
+    }];
+    
+    TEST_ASSERT(WaitFor(^int { return done; }));
+}
+
 int main(int argc, const char **argv)
 {
     WithPool(^{
         TEST(TestDevNull);
         TEST(TestPipe);
         TEST(TestHost);
+        TEST(TestSocket);
         
         NSString *message;
         if(gFailureCount)
