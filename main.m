@@ -3,11 +3,12 @@
 #import <netdb.h>
 
 #import "MAAsyncHost.h"
+#import "MAAsyncHTTPServer.h"
 #import "MAAsyncReader.h"
 #import "MAAsyncWriter.h"
-#import "MAFDRefcount.h"
 #import "MAAsyncSocketListener.h"
 #import "MAAsyncSocketUtils.h"
+#import "MAFDRefcount.h"
 
 
 static void WithPool(void (^block)(void))
@@ -248,6 +249,29 @@ static void TestSocketClosing(void)
     TEST_ASSERT(WaitFor(^int { return done; }));
 }
 
+static void TestHTTP(void)
+{
+    NSError *error;
+    MAAsyncHTTPServer *server = [[MAAsyncHTTPServer alloc] initWithPort: -1 error: &error];
+    TEST_ASSERT(server, @"%@", error);
+    
+    NSData *data = [@"testing 1 2 3" dataUsingEncoding: NSUTF8StringEncoding];
+    
+    [server setResourceHandler: ^(NSString *resource, MAAsyncWriter *writer) {
+        [writer writeData: data];
+    }];
+    
+    NSURL *url = [NSURL URLWithString:
+                  [NSString stringWithFormat: @"http://localhost:%d/", [server port]]];
+    NSURLRequest *request = [NSURLRequest requestWithURL: url];
+    
+    NSURLResponse *response;
+    NSData *responseData = [NSURLConnection sendSynchronousRequest: request returningResponse: &response error: &error];
+    
+    TEST_ASSERT(responseData, @"%@", error);
+    TEST_ASSERT([responseData isEqualToData: data]);
+}
+
 int main(int argc, const char **argv)
 {
     WithPool(^{
@@ -258,6 +282,7 @@ int main(int argc, const char **argv)
         TEST(TestSocketListen);
         TEST(TestSocketBoth);
         TEST(TestSocketClosing);
+        TEST(TestHTTP);
         
         NSString *message;
         if(gFailureCount)
