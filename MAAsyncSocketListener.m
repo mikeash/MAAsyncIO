@@ -51,7 +51,11 @@
     {
         int port = (i < r.length
                     ? i + r.location
-                    : mach_absolute_time() % 65536);
+                    : mach_absolute_time()) % 65536;
+        
+        // 0 has special meaning, which screws up the rest of the code
+        if(port == 0)
+            continue;
         
         addr4->sin_port = htons(port);
         addr6->sin6_port = htons(port);
