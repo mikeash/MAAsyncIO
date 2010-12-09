@@ -225,6 +225,29 @@ static void TestSocketBoth(void)
     TEST_ASSERT(WaitFor(^{ return done1 && done2; }));
 }
 
+static void TestSocketClosing(void)
+{
+    MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(0, 0) tryRandom: YES error: NULL];
+    TEST_ASSERT(listener);
+    
+    [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
+        [reader invalidate];
+        [writer invalidate];
+    }];
+    
+    __block BOOL done = NO;
+    [[MAAsyncHost hostWithName: @"localhost"] resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT([addresses count]);
+        MAAsyncSocketConnect([addresses objectAtIndex: 0], [listener port], ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+            [reader readBytes: 1 callback: ^(NSData *data) {
+                TEST_ASSERT(!data);
+                done = YES;
+            }];
+        });
+    }];
+    TEST_ASSERT(WaitFor(^int { return done; }));
+}
+
 int main(int argc, const char **argv)
 {
     WithPool(^{
@@ -234,6 +257,7 @@ int main(int argc, const char **argv)
         TEST(TestSocketConnect);
         TEST(TestSocketListen);
         TEST(TestSocketBoth);
+        TEST(TestSocketClosing);
         
         NSString *message;
         if(gFailureCount)
