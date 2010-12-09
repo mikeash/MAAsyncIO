@@ -70,7 +70,7 @@
 
 - (void)invalidate
 {
-    dispatch_sync(_queue, ^{
+    dispatch_block_t block = ^{
         if(_source)
         {
             dispatch_resume(_source);
@@ -78,7 +78,12 @@
             dispatch_release(_source);
             _source = NULL;
         }
-    });
+    };
+    
+    if(dispatch_get_current_queue() != _queue)
+        dispatch_sync(_queue, block);
+    else
+        block();
 }
 
 @end
