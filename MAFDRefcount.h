@@ -3,7 +3,7 @@
 //  MAAsyncIO
 //
 //  Created by Mike Ash on 12/7/10.
-//  Copyright 2010 Rogue Amoeba Software, LLC. All rights reserved.
+//  Copyright 2010 Mike Ash. All rights reserved.
 //
 
 #import <Cocoa/Cocoa.h>
