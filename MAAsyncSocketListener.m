@@ -126,6 +126,9 @@
             return nil;
         }
         
+        int yes = 1;
+        setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+        
         int result = bind(fd, [address bytes], [address length]);
         if(result == -1)
         {
