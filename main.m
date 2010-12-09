@@ -270,6 +270,8 @@ static void TestHTTP(void)
     
     TEST_ASSERT(responseData, @"%@", error);
     TEST_ASSERT([responseData isEqualToData: data]);
+    
+    [server release];
 }
 
 int main(int argc, const char **argv)

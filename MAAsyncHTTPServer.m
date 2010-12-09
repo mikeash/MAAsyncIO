@@ -31,7 +31,7 @@
         else
             r = NSMakeRange(0, 0);
         
-        _listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: r tryRandom: port <= 0 error: error];
+        _listener = [[MAAsyncSocketListener listenerWith4and6WithPortRange: r tryRandom: port <= 0 error: error] retain];
         if(!_listener)
         {
             [self release];
@@ -93,6 +93,7 @@
                 NSString *resource = [parts objectAtIndex: 1];
                 [self _readRequestLines: reader writer: writer resource: resource];
             }
+            [s release];
         }
     }];
 }

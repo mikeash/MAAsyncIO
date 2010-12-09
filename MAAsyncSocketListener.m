@@ -69,6 +69,8 @@
                 listener = [[MAAsyncCompoundSocketListener alloc] init];
                 [listener addListener: listener4];
                 [listener addListener: listener6];
+                [listener4 release];
+                [listener6 release];
                 [listener autorelease];
                 break;
             }
@@ -174,7 +176,7 @@
 
 - (void)setAcceptCallback: (void (^)(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress))block
 {
-    if(!_source && !_callback && !block)
+    if(!_source)
         return;
     
     dispatch_async([_source queue], ^{
