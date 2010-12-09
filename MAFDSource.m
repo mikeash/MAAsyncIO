@@ -24,6 +24,10 @@
         _source = dispatch_source_create(type, fd, 0, _queue);
         dispatch_source_set_cancel_handler(_source, ^{ MAFDRelease(fd); });
         
+#if FD_SOURCE_DEBUG
+        _suspendCount = 1;
+#endif
+        
         int flags = fcntl(_fd, F_GETFL, 0);
         fcntl(_fd, F_SETFL, flags | O_NONBLOCK);
     }
@@ -61,15 +65,26 @@
 - (void)suspend
 {
     dispatch_suspend(_source);
+#if FD_SOURCE_DEBUG
+    _suspendCount++;
+#endif
 }
 
 - (void)resume
 {
     dispatch_resume(_source);
+#if FD_SOURCE_DEBUG
+    _suspendCount--;
+    assert(_suspendCount >= 0);
+#endif
 }
 
 - (void)invalidate
 {
+#if FD_SOURCE_DEBUG
+    assert(_suspendCount == 1);
+#endif
+    
     dispatch_block_t block = ^{
         if(_source)
         {

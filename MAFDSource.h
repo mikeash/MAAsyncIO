@@ -9,11 +9,17 @@
 #import <Cocoa/Cocoa.h>
 
 
+#define FD_SOURCE_DEBUG 1
+
 @interface MAFDSource : NSObject
 {
     dispatch_source_t _source;
     dispatch_queue_t _queue;
     int _fd;
+    
+#if FD_SOURCE_DEBUG
+    int _suspendCount;
+#endif
 }
 
 - (id)initWithFileDescriptor: (int)fd type: (dispatch_source_type_t)type; // takes ownership of fd
