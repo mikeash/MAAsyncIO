@@ -162,7 +162,6 @@
 
 - (void)dealloc
 {
-    [self setAcceptCallback: nil];
     [self invalidate];
     
     [super dealloc];
@@ -192,6 +191,7 @@
 
 - (void)invalidate
 {
+    [self setAcceptCallback: nil];
     [_source invalidate];
 }
 
