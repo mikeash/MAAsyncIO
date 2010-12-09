@@ -202,22 +202,27 @@ static void TestSocketBoth(void)
     MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(1, 20) tryRandom: YES error: &error];
     TEST_ASSERT(listener, @"%@", error);
     
+    __block BOOL done1 = NO;
     [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
         [reader readBytes: 1 callback: ^(NSData *data) {
             TEST_ASSERT(*(const char *)[data bytes] == 'a');
             [writer writeCString: "b"];
+            done1 = YES;
         }];
     }];
     
+    __block BOOL done2 = NO;
     [[MAAsyncHost hostWithName: @"localhost"] resolve: ^(NSArray *addresses, CFStreamError error) {
         TEST_ASSERT([addresses count]);
         MAAsyncSocketConnect([addresses objectAtIndex: 0], [listener port], ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
             [writer writeCString: "a"];
             [reader readBytes: 1 callback: ^(NSData *data) {
                 TEST_ASSERT(*(const char *)[data bytes] == 'b');
+                done2 = YES;
             }];
         });
     }];
+    TEST_ASSERT(WaitFor(^{ return done1 && done2; }));
 }
 
 int main(int argc, const char **argv)
