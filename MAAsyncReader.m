@@ -70,6 +70,7 @@ const NSRange MAKeepReading = { NSNotFound, 0 };
     
     _condition = [condBlock copy];
     _readCallback = [callbackBlock copy];
+    [self retain]; // make sure we stick around until the read is done
     
     dispatch_async([_fdSource queue], ^{
         [_fdSource resume];
@@ -139,6 +140,8 @@ const NSRange MAKeepReading = { NSNotFound, 0 };
     
     localReadCallback(data);
     [localReadCallback release];
+    
+    [self release]; // balance the retain from readUntilCondition:
 }
 
 - (void)_checkCondition

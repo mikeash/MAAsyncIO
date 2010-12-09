@@ -73,7 +73,10 @@
         NSUInteger previousBufferLength = [_buffer length];
         [_buffer appendData: data];
         if(!previousBufferLength)
+        {
+            [self retain]; // keep the object alive until it's done writing
             [_fdSource resume];
+        }
     });
 }
 
@@ -134,7 +137,10 @@
     }
     
     if(![_buffer length])
+    {
         [_fdSource suspend];
+        [self release]; // balance the retain in writeData:
+    }
 }
 
 @end
