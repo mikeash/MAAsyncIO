@@ -38,6 +38,8 @@ void MAAsyncSocketConnect(NSData *address, int port, void (^block)(MAAsyncReader
         int result = connect(fd, sockaddr, [address length]);
         
         void (^completion)(void) = ^{
+            [source suspend];
+            
             int err;
             socklen_t len = sizeof(err);
             getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
@@ -53,6 +55,7 @@ void MAAsyncSocketConnect(NSData *address, int port, void (^block)(MAAsyncReader
                 [reader release];
                 [writer release];
             }
+            [source invalidate];
             [source release];
         };
         
