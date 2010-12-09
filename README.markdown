@@ -91,17 +91,10 @@ The `MAAsyncHost` function provides asynchronous DNS lookups using a block callb
 
 Here's an example server which simply writes "hello" to any client:
 
-        MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(0, 0) tryRandom: YES error: NULL];
-        [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
-            [writer writeCString: "hello"];
-            [writer setDidWriteCallback: ^() {
-                if([writer bufferSize] == 0)
-                {
-                    [reader invalidate];
-                    [writer invalidate];
-                }
-            }];
-        }];
+    MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(0, 0) tryRandom: YES error: NULL];
+    [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
+        [writer writeCString: "hello"];
+    }];
 
 
 Work In Progress
