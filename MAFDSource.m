@@ -81,11 +81,14 @@
 
 - (void)invalidate
 {
-#if FD_SOURCE_DEBUG
-    assert(_suspendCount == 1);
-#endif
-    
     dispatch_block_t block = ^{
+#if FD_SOURCE_DEBUG
+        if(_suspendCount != 1)
+        {
+            NSLog(@"invalidating %@ with suspend count of %d", self, _suspendCount);
+            abort();
+        }
+#endif
         if(_source)
         {
             dispatch_resume(_source);
