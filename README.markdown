@@ -71,6 +71,39 @@ These semantics make it possible to share an fd among multiple objects, so that 
     // now use reader and writer
 
 
+Sockets
+-------
+
+The async readers and writers make a natural interface to TCP sockets, whose unpredictable delays make asynchronous handling extremely advantageous. MAAsyncIO provides ways to create reader/writer pairs for a connected socket.
+
+The `MAAsyncSocketConnect` function connects to an address/port pair and then invokes its callback, passing a reader/writer pair that the callback can then use.
+
+The `MAAsyncHost` function provides asynchronous DNS lookups using a block callback. By putting the two together, you can easily connect to a remote server:
+
+    [[MAAsyncHost hostWithName: @"www.google.com"] resolve: ^(NSArray *addresses, CFStreamError error) {
+        // in real code, check to make sure addresses is populated and there wasn't an error
+        MAAsyncSocketConnect([addresses objectAtIndex: 0], 80, ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+            // connected, use reader/writer to communicate
+        });
+    }];
+
+`MAAsyncSocketListener` can be used to bind a listening socket that automatically accepts new connections and invokes a callback with a reader/writer pair fon the new connection. The `+listenerWithAddress:error:` method can be used to create a listener that's bound to a single address. The `+listenerWith4and6WithPortRange:tryRandom:error:` is a more sophisticated method which will bind both an IPv4 and IPv6 socket to the same port. You can specify a port range to try, and specify whether or not to try random ports if all of the ports in the given range are taken. If you don't care about the port, you can pass `NSMakeRange(0, 0)` as the range to have it only try random ports.
+
+Here's an example server which simply writes "hello" to any client:
+
+        MAAsyncSocketListener *listener = [MAAsyncSocketListener listenerWith4and6WithPortRange: NSMakeRange(0, 0) tryRandom: YES error: NULL];
+        [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
+            [writer writeCString: "hello"];
+            [writer setDidWriteCallback: ^() {
+                if([writer bufferSize] == 0)
+                {
+                    [reader invalidate];
+                    [writer invalidate];
+                }
+            }];
+        }];
+
+
 Work In Progress
 ----------------
 
@@ -79,8 +112,6 @@ As stated above, MAAsyncIO is a work in progress. In particular, the following a
 - Having to manually read past a delimeter (e.g. a newline) after reading up to it is annoying. The API should make it possible to do both in one chunk. Possibly the condition callback could return two values, one specifying the data to present to the read callback, and one specifying how much data to actually chop.
 
 - The reader has no buffer limits, so it can go forever if the data never meets the conditions.
-
-- This sort of async IO is especially useful when dealing with sockets. Helpers for creating a connected socket or listening on a port should be created that can automatically return reader/writer pairs.
 
 - Everything needs more and better tests.
 
