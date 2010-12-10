@@ -102,9 +102,9 @@ Work In Progress
 
 As stated above, MAAsyncIO is a work in progress. In particular, the following areas are deficient:
 
-- Having to manually read past a delimeter (e.g. a newline) after reading up to it is annoying. The API should make it possible to do both in one chunk. Possibly the condition callback could return two values, one specifying the data to present to the read callback, and one specifying how much data to actually chop.
-
 - The reader has no buffer limits, so it can go forever if the data never meets the conditions.
+
+- The rules for when it's safe to invalidate objects (e.g. you can't invalidate a suspended `MAFDSource`) are too confusing. Everything should be made more robust in this respect.
 
 - Everything needs more and better tests.
 
