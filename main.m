@@ -193,18 +193,15 @@ static void TestHostMultipleResolution(void)
 static void TestSocketConnect(void)
 {
     __block BOOL done = NO;
-    [[MAAsyncHost hostWithName: @"www.google.com"] resolve: ^(NSArray *addresses, CFStreamError error) {
-        TEST_ASSERT([addresses count]);
-        NSData *address = [addresses objectAtIndex: 0];
-        MAAsyncSocketConnect(address, 80, ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+    [[MAAsyncHost hostWithName: @"www.google.com"] connectToPort: 80 callback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+        TEST_ASSERT(reader && writer, @"%@", error);
+        if(reader && writer)
+        {
             [writer writeCString: "GET /\n\n"];
             [reader readBytes: 1 callback: ^(NSData *data) {
                 done = YES;
-                
-                [reader self];
-                [writer self];
             }];
-        });
+        }
     }];
     
     TEST_ASSERT(WaitFor(^int { return done; }));
@@ -233,15 +230,16 @@ static void TestSocketBoth(void)
     }];
     
     __block BOOL done2 = NO;
-    [[MAAsyncHost hostWithName: @"localhost"] resolve: ^(NSArray *addresses, CFStreamError error) {
-        TEST_ASSERT([addresses count]);
-        MAAsyncSocketConnect([addresses objectAtIndex: 0], [listener port], ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+    [[MAAsyncHost hostWithName: @"localhost"] connectToPort: [listener port] callback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+        TEST_ASSERT(reader && writer, @"%@", error);
+        if(reader && writer)
+        {
             [writer writeCString: "a"];
             [reader readBytes: 1 callback: ^(NSData *data) {
                 TEST_ASSERT(*(const char *)[data bytes] == 'b');
                 done2 = YES;
             }];
-        });
+        }
     }];
     TEST_ASSERT(WaitFor(^{ return done1 && done2; }));
 }
@@ -257,14 +255,15 @@ static void TestSocketClosing(void)
     }];
     
     __block BOOL done = NO;
-    [[MAAsyncHost hostWithName: @"localhost"] resolve: ^(NSArray *addresses, CFStreamError error) {
-        TEST_ASSERT([addresses count]);
-        MAAsyncSocketConnect([addresses objectAtIndex: 0], [listener port], ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+    [[MAAsyncHost hostWithName: @"localhost"] connectToPort: [listener port] callback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+        TEST_ASSERT(reader && writer, @"%@", error);
+        if(reader && writer)
+        {
             [reader readBytes: 1 callback: ^(NSData *data) {
                 TEST_ASSERT(!data);
                 done = YES;
             }];
-        });
+        }
     }];
     TEST_ASSERT(WaitFor(^int { return done; }));
 }

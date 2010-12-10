@@ -9,6 +9,13 @@
 #import <Cocoa/Cocoa.h>
 
 
+// code will be the domain of the CFStreamError
+// error code will be in userinfo "cfcode"
+extern NSString * const MACFStreamNSErrorDomain;
+
+@class MAAsyncReader;
+@class MAAsyncWriter;
+
 @interface MAAsyncHost : NSObject
 {
     CFHostRef _cfhost;
@@ -23,5 +30,10 @@
 - (id)initWithName: (NSString *)name;
 
 - (void)resolve: (void (^)(NSArray *addresses, CFStreamError error))block;
+
+// this will automaticalyl resolve the host and then try to connect to all of the resolved addresses
+// in sequence until one works
+// errors will be in the MACFStreamNSErrorDomain if resolution fails
+- (void)connectToPort: (int)port callback: (void (^)(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error))block;
 
 @end

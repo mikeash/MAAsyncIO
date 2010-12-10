@@ -8,6 +8,12 @@
 
 #import "MAAsyncHost.h"
 
+#include <netdb.h>
+
+#import "MAAsyncSocketUtils.h"
+
+
+NSString * const MACFStreamNSErrorDomain = @"com.mikeash.MACFStreamNSErrorDomain";
 
 @implementation MAAsyncHost
 
@@ -135,6 +141,47 @@ static void ResolveCallback(CFHostRef theHost, CFHostInfoType typeInfo, const CF
                 [_resolveBlocks addObject: block];
         }
     });
+}
+
+- (NSError *)_errorForCFStreamError: (CFStreamError)cferror
+{
+    NSDictionary *userInfo = [NSDictionary dictionaryWithObjectsAndKeys: 
+                              [NSNumber numberWithInteger: cferror.error], @"cfcode",
+                              nil];
+    NSError *error = [NSError errorWithDomain: MACFStreamNSErrorDomain code: cferror.domain userInfo: userInfo];
+    return error;
+}
+
+- (void)_connectToPort: (int)port addressEnumerator: (NSEnumerator *)enumerator lastError: (NSError *)lastError callback: (void (^)(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error))block
+{
+    NSData *address = [enumerator nextObject];
+    if(!address)
+    {
+        if(!lastError)
+            lastError = [self _errorForCFStreamError: (CFStreamError){ kCFStreamErrorDomainNetDB, NO_DATA }];
+        block(nil, nil, lastError);
+    }
+    else
+    {
+        MAAsyncSocketConnect(address, port, ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+            if(reader && writer)
+                block(reader, writer, nil);
+            else
+                [self _connectToPort: port addressEnumerator: enumerator lastError: error callback: block];
+        });
+    }
+}
+
+- (void)connectToPort: (int)port callback: (void (^)(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error))block
+{
+    [self resolve: ^(NSArray *addresses, CFStreamError error) {
+        if(!addresses)
+        {
+            block(nil, nil, [self _errorForCFStreamError: error]);
+        }
+        else
+            [self _connectToPort: port addressEnumerator: [addresses objectEnumerator] lastError: nil callback: block];
+    }];
 }
 
 @end
