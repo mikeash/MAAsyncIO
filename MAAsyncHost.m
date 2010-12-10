@@ -52,6 +52,8 @@
     if((self = [self init]))
     {
         _cfhost = CFHostCreateWithName(NULL, (CFStringRef)name);
+        _queue = dispatch_queue_create("com.mikeash.MAAsyncHost", NULL);
+        _resolveBlocks = [[NSMutableArray alloc] init];
     }
     return self;
 }
@@ -59,34 +61,80 @@
 - (void)dealloc
 {
     CFRelease(_cfhost);
-    [_resolveBlock release];
+    dispatch_release(_queue);
+    [_addresses release];
+    [_resolveBlocks release];
     
     [super dealloc];
 }
 
-static void ResolveCallback(CFHostRef theHost, CFHostInfoType typeInfo, const CFStreamError *error, void *info)
+- (void)_callResolveBlocksAddresses: (NSArray *)addresses error: (CFStreamError)error
+{
+    void (^block)(NSArray *addresses, CFStreamError error);
+    for(block in _resolveBlocks)
+        block(addresses, error);
+    [_resolveBlocks removeAllObjects];
+}
+
+static void ResolveCallback(CFHostRef theHost, CFHostInfoType typeInfo, const CFStreamError *errorPtr, void *info)
 {
     MAAsyncHost *self = info;
-    if(error && error->domain)
-        self->_resolveBlock(nil, *error);
-    else
-        self->_resolveBlock((NSArray *)CFHostGetAddressing(self->_cfhost, NULL), (CFStreamError){ 0, 0 });
+    CFStreamError error = { 0, 0 };
+    if(errorPtr)
+        error = *errorPtr;
+    
+    assert(!self->_addresses);
+    
+    NSArray *addresses = [(NSArray *)CFHostGetAddressing(self->_cfhost, NULL) copy];
+    
+    dispatch_async(self->_queue, ^{
+        if(error.domain)
+        {
+            [self _callResolveBlocksAddresses: nil error: error];
+        }
+        else
+        {
+            self->_addresses = [addresses copy];
+            [self _callResolveBlocksAddresses: self->_addresses error: (CFStreamError){ 0, 0 }];
+        }
+    });
+    
+    [addresses release];
 }
 
 - (void)resolve: (void (^)(NSArray *addresses, CFStreamError error))block
 {
-    _resolveBlock = [block copy];
-    
-    CFHostClientContext ctx = { 0, self, CFRetain, CFRelease, NULL };
-    CFHostSetClient(_cfhost, ResolveCallback, &ctx);
-    
-    CFHostScheduleWithRunLoop(_cfhost, [[self class] _resolutionRunloop], kCFRunLoopDefaultMode);
-    
-    CFStreamError error;
-    Boolean success = CFHostStartInfoResolution(_cfhost, kCFHostAddresses, &error);
-    
-    if(!success)
-        block(nil, error);
+    dispatch_async(_queue, ^{
+        if(_addresses)
+        {
+            block(_addresses, (CFStreamError){ 0, 0 });
+        }
+        else 
+        {
+            if(!_resolving)
+            {
+                CFHostClientContext ctx = { 0, self, CFRetain, CFRelease, NULL };
+                CFHostSetClient(_cfhost, ResolveCallback, &ctx);
+                
+                CFHostScheduleWithRunLoop(_cfhost, [[self class] _resolutionRunloop], kCFRunLoopDefaultMode);
+                
+                CFStreamError error;
+                Boolean success = CFHostStartInfoResolution(_cfhost, kCFHostAddresses, &error);
+                
+                if(!success)
+                {
+                    block(nil, error);
+                }
+                else
+                {
+                    [_resolveBlocks addObject: block];
+                    _resolving = YES;
+                }
+            }
+            else
+                [_resolveBlocks addObject: block];
+        }
+    });
 }
 
 @end

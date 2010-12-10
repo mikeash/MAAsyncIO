@@ -12,7 +12,10 @@
 @interface MAAsyncHost : NSObject
 {
     CFHostRef _cfhost;
-    void (^_resolveBlock)(NSArray *addresses, CFStreamError error);
+    dispatch_queue_t _queue;
+    BOOL _resolving;
+    NSArray *_addresses;
+    NSMutableArray *_resolveBlocks;
 }
 
 + (id)hostWithName: (NSString *)name;

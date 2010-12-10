@@ -170,6 +170,26 @@ static void TestHost(void)
     TEST_ASSERT(WaitFor(^int { return done2; }));
 }
 
+static void TestHostMultipleResolution(void)
+{
+    __block BOOL done1 = NO;
+    __block BOOL done2 = NO;
+    
+    MAAsyncHost *host = [MAAsyncHost hostWithName: @"localhost"];
+    [host resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT(addresses);
+        TEST_ASSERT(!error.domain);
+        done1 = YES;
+    }];
+    [host resolve: ^(NSArray *addresses, CFStreamError error) {
+        TEST_ASSERT(addresses);
+        TEST_ASSERT(!error.domain);
+        done2 = YES;
+    }];
+    
+    TEST_ASSERT(WaitFor(^{ return done1 && done2; }));
+}
+
 static void TestSocketConnect(void)
 {
     __block BOOL done = NO;
@@ -280,6 +300,7 @@ int main(int argc, const char **argv)
         TEST(TestDevNull);
         TEST(TestPipe);
         TEST(TestHost);
+        TEST(TestHostMultipleResolution);
         TEST(TestSocketConnect);
         TEST(TestSocketListen);
         TEST(TestSocketBoth);
