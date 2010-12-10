@@ -78,13 +78,11 @@ The async readers and writers make a natural interface to TCP sockets, whose unp
 
 The `MAAsyncSocketConnect` function connects to an address/port pair and then invokes its callback, passing a reader/writer pair that the callback can then use.
 
-The `MAAsyncHost` function provides asynchronous DNS lookups using a block callback. By putting the two together, you can easily connect to a remote server:
+The `MAAsyncHost` function provides asynchronous DNS lookups using a block callback. It can also attempt a connection to the looked up addresses by trying them sequentially with `MAAsyncSocketConnect`. With this, you can easily connect to a remote server:
 
-    [[MAAsyncHost hostWithName: @"www.google.com"] resolve: ^(NSArray *addresses, CFStreamError error) {
-        // in real code, check to make sure addresses is populated and there wasn't an error
-        MAAsyncSocketConnect([addresses objectAtIndex: 0], 80, ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
-            // connected, use reader/writer to communicate
-        });
+    [[MAAsyncHost hostWithName: @"www.google.com"] connectToPort: 80 callback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+        // check error
+        // connected, use reader/writer to communicate  
     }];
 
 `MAAsyncSocketListener` can be used to bind a listening socket that automatically accepts new connections and invokes a callback with a reader/writer pair fon the new connection. The `+listenerWithAddress:error:` method can be used to create a listener that's bound to a single address. The `+listenerWith4and6WithPortRange:tryRandom:error:` is a more sophisticated method which will bind both an IPv4 and IPv6 socket to the same port. You can specify a port range to try, and specify whether or not to try random ports if all of the ports in the given range are taken. If you don't care about the port, you can pass `NSMakeRange(0, 0)` as the range to have it only try random ports.
