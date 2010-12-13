@@ -129,7 +129,7 @@ const NSRange MAKeepReading = { NSNotFound, 0 };
     }
 }
 
-- (void)_fireReadCallback: (NSData *)data
+- (void)_fireReadCallback: (NSData *)data prematureEOF: (BOOL)flag
 {
     // a fancy dance so that the callback can set up a new callback without breaking everything
     MAReadCallback localReadCallback = _readCallback;
@@ -138,7 +138,7 @@ const NSRange MAKeepReading = { NSNotFound, 0 };
     [_condition release];
     _condition = nil;
     
-    localReadCallback(data);
+    localReadCallback(data, flag);
     [localReadCallback release];
     
     [self release]; // balance the retain from readUntilCondition:
@@ -160,12 +160,12 @@ const NSRange MAKeepReading = { NSNotFound, 0 };
             NSRange deleteRange = NSMakeRange(0, NSMaxRange(r));
             [_buffer replaceBytesInRange: deleteRange withBytes: NULL length: 0];
             
-            [self _fireReadCallback: chunk];
+            [self _fireReadCallback: chunk prematureEOF: NO];
         }
         else if(_isEOF)
         {
             [_fdSource suspend];
-            [self _fireReadCallback: nil];
+            [self _fireReadCallback: _buffer prematureEOF: YES];
         }
     }
 }

@@ -18,11 +18,13 @@ static void WithPool(void (^block)(void))
     [pool release];
 }
 
+static const char *gFunctionName;
 static int gFailureCount;
 
 static void Test(void (*func)(void), const char *name)
 {
     WithPool(^{
+        gFunctionName = name;
         int failureCount = gFailureCount;
         NSLog(@"Testing %s", name);
         func();
@@ -36,7 +38,7 @@ static void Test(void (*func)(void), const char *name)
         if(!(cond)) { \
             gFailureCount++; \
             NSString *message = [NSString stringWithFormat: @"" __VA_ARGS__]; \
-            NSLog(@"%s:%d: assertion failed: %s %@", __func__, __LINE__, #cond, message); \
+            NSLog(@"%s:%d: assertion failed: %s %@", gFunctionName, __LINE__, #cond, message); \
         } \
     } while(0)
 
@@ -105,8 +107,8 @@ static void TestDevNull(void)
             
             __block BOOL didRead = NO;
             [reader readUntilCondition: ^NSRange (NSData *buffer) { return MAKeepReading; }
-                              callback: ^(NSData *data) {
-                                  TEST_ASSERT(!data);
+                              callback: ^(NSData *data, BOOL prematureEOF) {
+                                  TEST_ASSERT(prematureEOF);
                                   didRead = YES;
                               }];
             WaitFor(^int { return didRead; });
@@ -124,13 +126,13 @@ static void TestPipe(void)
                 
                 __block BOOL done = NO;
                 
-                [reader readBytes: 5 callback: ^(NSData *data) {
+                [reader readBytes: 5 callback: ^(NSData *data, BOOL prematureEOF) {
                     TEST_ASSERT([data isEqualToData: d1]);
-                    [reader readUntilCString: "\n" callback: ^(NSData *data) {
+                    [reader readUntilCString: "\n" callback: ^(NSData *data, BOOL prematureEOF) {
                         TEST_ASSERT([data isEqualToData: d2]);
-                        [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
+                        [reader readUntilCString: "\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
                             TEST_ASSERT([data isEqualToData: d3]);
-                            [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
+                            [reader readUntilCString: "\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
                                 TEST_ASSERT(data && [data length] == 0);
                                 done = YES;
                             }];
@@ -148,6 +150,23 @@ static void TestPipe(void)
                 TEST_ASSERT(WaitFor(^int { return done; }));
             });
         });
+}
+
+static void TestReadToEOF(void)
+{
+    WithPipe(^(MAAsyncReader *reader, MAAsyncWriter *writer) {
+        char *str = "hello world";
+        NSData *data = [NSData dataWithBytes: str length: strlen(str)];
+        [writer setDidWriteCallback: ^ { if([writer bufferSize] == 0) [writer invalidate]; }];
+        [writer writeData: data];
+        __block BOOL done = NO;
+        [reader readUntilCondition: ^(NSData *buffer) { return MAKeepReading; } callback: ^(NSData *indata, BOOL prematureEOF) {
+            TEST_ASSERT(prematureEOF);
+            TEST_ASSERT([indata isEqual: data]);
+            done = YES;
+        }];
+        TEST_ASSERT(WaitFor(^int { return done; }));
+    });
 }
 
 static void TestHost(void)
@@ -198,7 +217,7 @@ static void TestSocketConnect(void)
         if(reader && writer)
         {
             [writer writeCString: "GET /\n\n"];
-            [reader readBytes: 1 callback: ^(NSData *data) {
+            [reader readBytes: 1 callback: ^(NSData *data, BOOL prematureEOF) {
                 done = YES;
             }];
         }
@@ -222,7 +241,7 @@ static void TestSocketBoth(void)
     
     __block BOOL done1 = NO;
     [listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
-        [reader readBytes: 1 callback: ^(NSData *data) {
+        [reader readBytes: 1 callback: ^(NSData *data, BOOL prematureEOF) {
             TEST_ASSERT(*(const char *)[data bytes] == 'a');
             [writer writeCString: "b"];
             done1 = YES;
@@ -235,7 +254,7 @@ static void TestSocketBoth(void)
         if(reader && writer)
         {
             [writer writeCString: "a"];
-            [reader readBytes: 1 callback: ^(NSData *data) {
+            [reader readBytes: 1 callback: ^(NSData *data, BOOL prematureEOF) {
                 TEST_ASSERT(*(const char *)[data bytes] == 'b');
                 done2 = YES;
             }];
@@ -259,8 +278,8 @@ static void TestSocketClosing(void)
         TEST_ASSERT(reader && writer, @"%@", error);
         if(reader && writer)
         {
-            [reader readBytes: 1 callback: ^(NSData *data) {
-                TEST_ASSERT(!data);
+            [reader readBytes: 1 callback: ^(NSData *data, BOOL prematureEOF) {
+                TEST_ASSERT(prematureEOF);
                 done = YES;
             }];
         }
@@ -298,6 +317,7 @@ int main(int argc, const char **argv)
     WithPool(^{
         TEST(TestDevNull);
         TEST(TestPipe);
+        TEST(TestReadToEOF);
         TEST(TestHost);
         TEST(TestHostMultipleResolution);
         TEST(TestSocketConnect);

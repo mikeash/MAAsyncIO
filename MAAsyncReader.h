@@ -9,7 +9,7 @@
 #import <Cocoa/Cocoa.h>
 
 
-typedef void (^MAReadCallback)(NSData *data); // nil data means EOF hit before condition met
+typedef void (^MAReadCallback)(NSData *data, BOOL prematureEOF); // prematureOF = EOF hit before condition met
 
 @class MAFDSource;
 

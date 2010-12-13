@@ -65,7 +65,7 @@
 
 - (void)_readRequestLines: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer resource: (NSString *)resource
 {
-    [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
+    [reader readUntilCString: "\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
         if([data length])
         {
             NSString *s = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
@@ -83,7 +83,7 @@
 
 - (void)_gotConnection: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer
 {
-    [reader readUntilCString: "\r\n" callback: ^(NSData *data) {
+    [reader readUntilCString: "\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
         if(data)
         {
             NSString *s = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
