@@ -112,11 +112,17 @@
 
 - (void)_write
 {
+    BOOL emptyBuffer = YES;
+    
     if([_buffer length])
     {
         ssize_t result = write(_fd, [_buffer bytes], [_buffer length]);
         NSUInteger didWrite = MAX(result, 0); // -1 (error) means wrote 0 bytes
         [_buffer replaceBytesInRange: NSMakeRange(0, didWrite) withBytes: NULL length: 0];
+        emptyBuffer = ![_buffer length];
+        
+        if(emptyBuffer)
+            [_fdSource suspend];
         
         if(result < 0)
         {
@@ -136,11 +142,8 @@
         }
     }
     
-    if(![_buffer length])
-    {
-        [_fdSource suspend];
+    if(emptyBuffer)
         [self release]; // balance the retain in writeData:
-    }
 }
 
 @end
