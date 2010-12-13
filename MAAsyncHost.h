@@ -31,7 +31,7 @@ extern NSString * const MACFStreamNSErrorDomain;
 
 - (void)resolve: (void (^)(NSArray *addresses, CFStreamError error))block;
 
-// this will automaticalyl resolve the host and then try to connect to all of the resolved addresses
+// this will automatically resolve the host and then try to connect to all of the resolved addresses
 // in sequence until one works
 // errors will be in the MACFStreamNSErrorDomain if resolution fails
 - (void)connectToPort: (int)port callback: (void (^)(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error))block;
