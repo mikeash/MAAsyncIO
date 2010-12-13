@@ -160,7 +160,7 @@ static void TestReadToEOF(void)
         [writer setDidWriteCallback: ^ { if([writer bufferSize] == 0) [writer invalidate]; }];
         [writer writeData: data];
         __block BOOL done = NO;
-        [reader readUntilCondition: ^(NSData *buffer) { return MAKeepReading; } callback: ^(NSData *indata, BOOL prematureEOF) {
+        [reader readUntilEOFCallback: ^(NSData *indata, BOOL prematureEOF) {
             TEST_ASSERT(prematureEOF);
             TEST_ASSERT([indata isEqual: data]);
             done = YES;

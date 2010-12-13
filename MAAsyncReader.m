@@ -97,6 +97,11 @@ const NSRange MAKeepReading = { NSNotFound, 0 };
     [self readUntilData: [NSData dataWithBytes: cstr length: strlen(cstr)] callback: callbackBlock];
 }
 
+- (void)readUntilEOFCallback: (MAReadCallback)callbackBlock
+{
+    [self readUntilCondition: ^(NSData *buffer) { return MAKeepReading; } callback: callbackBlock];
+}
+
 - (void)invalidate
 {
     [_fdSource invalidate];

@@ -48,6 +48,7 @@ typedef void (^MAReadCallback)(NSData *data, BOOL prematureEOF); // prematureOF 
 - (void)readBytes: (NSUInteger)bytes callback: (MAReadCallback)callbackBlock;
 - (void)readUntilData: (NSData *)data callback: (MAReadCallback)callbackBlock;
 - (void)readUntilCString: (const char *)cstr callback: (MAReadCallback)callbackBlock;
+- (void)readUntilEOFCallback: (MAReadCallback)callbackBlock;
 
 // stopping
 - (void)invalidate;
