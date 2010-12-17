@@ -19,9 +19,7 @@ As an example, here's how you could read one line from a file:
 
     MAAsyncReader *reader = [[MAAsyncReader alloc] initWithFileDescriptor: someFD];
     [reader readUntilCString: "\n" callback: ^(NSData *lineData) {
-        [reader readBytes: 1 callback: ^{ // read the newline too
-            // do something with 'line'
-        }];
+        // do something with 'line'
     }];
 
 This is all done completely asynchronously and nonblocking. By default, the "do something" code will run on the global dispatch queue, meaning it runs in the background and concurrently. By using `setTargetQueue:`, you can make it run on the dispatch queue of your choice, including the main thread.
