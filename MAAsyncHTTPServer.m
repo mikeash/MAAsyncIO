@@ -10,8 +10,6 @@
 
 #import "MAAsyncReader.h"
 #import "MAAsyncSocketListener.h"
-#import "MAAsyncWriter.h"
-
 
 @interface MAAsyncHTTPServer ()
 
@@ -45,13 +43,13 @@
 {
     [_listener invalidate];
     [_listener release];
-    [_resourceHandler release];
+    [_requestHandler release];
     [super dealloc];
 }
 
-- (void)setResourceHandler: (void (^)(NSString *resource, MAAsyncWriter *writer))block
+- (void)setRequestHandler: (void (^)(MAHTTPRequest *request, MAAsyncWriter *writer))block
 {
-    _resourceHandler = [block copy];
+    _requestHandler = [block copy];
     __block MAAsyncHTTPServer *weakSelf = self;
     [_listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
         [weakSelf _gotConnection: reader writer: writer];
@@ -63,37 +61,32 @@
     return [_listener port];
 }
 
-- (void)_readRequestLines: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer resource: (NSString *)resource
+- (void)_readRequestContent: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer request: (MAHTTPRequest *)request
 {
-    [reader readUntilCString: "\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
-        if([data length])
-        {
-            NSString *s = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-            [s release];
-            [self _readRequestLines: reader writer: writer resource: resource];
-        }
-        else
-        {
-            _resourceHandler(resource, writer);
-            
-            [reader invalidate];
-        }
+    [reader readBytes:[request expectedContentLength] callback: ^(NSData *data, BOOL prematureEOF) {
+        [request setContent:data];
+        _requestHandler(request, writer);            
+        [reader invalidate];
     }];
 }
 
 - (void)_gotConnection: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer
 {
-    [reader readUntilCString: "\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
+    [reader readUntilCString: "\r\n\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
         if(data)
-        {
-            NSString *s = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-            NSArray *parts = [s componentsSeparatedByString: @" "];
-            if([parts count] >= 2)
+        {            
+            MAHTTPRequest *request = [[MAHTTPRequest alloc] initWithHeader:data];
+            if([request expectedContentLength] == 0)
             {
-                NSString *resource = [parts objectAtIndex: 1];
-                [self _readRequestLines: reader writer: writer resource: resource];
+                _requestHandler(request, writer);
+                [reader invalidate];
             }
-            [s release];
+            else
+            {
+                [self _readRequestContent:reader writer:writer request:request];
+            }
+            
+            [request release];
         }
     }];
 }

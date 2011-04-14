@@ -7,20 +7,21 @@
 //
 
 #import <Cocoa/Cocoa.h>
-
+#import "MAHTTPRequest.h"
+#import "MAAsyncWriter.h"
 
 @class MAAsyncSocketListener;
-@class MAAsyncWriter;
+
 
 @interface MAAsyncHTTPServer : NSObject
 {
     MAAsyncSocketListener *_listener;
-    void (^_resourceHandler)(NSString *resource, MAAsyncWriter *writer);
+    void (^_requestHandler)(MAHTTPRequest *request, MAAsyncWriter *writer);
 }
 
 - (id)initWithPort: (int)port error: (NSError **)error;
 
-- (void)setResourceHandler: (void (^)(NSString *resource, MAAsyncWriter *writer))block;
+- (void)setRequestHandler: (void (^)(MAHTTPRequest *request, MAAsyncWriter *writer))block;
 
 - (int)port;
 
