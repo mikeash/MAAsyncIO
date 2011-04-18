@@ -24,16 +24,16 @@ static void Init(void)
 static int GetRefcount(int fd)
 {
     void *value;
-    Boolean present = CFDictionaryGetValueIfPresent(gRefcounts, (void *)fd, (void *)&value);
-    return present ? (int)value : 1;
+    Boolean present = CFDictionaryGetValueIfPresent(gRefcounts, (void *)(intptr_t)fd, (void *)&value);
+    return present ? (intptr_t)value : 1;
 }
 
 static void SetRefcount(int fd, int count)
 {
     if(count == 1) // 1 is represented by not having an entry
-        CFDictionaryRemoveValue(gRefcounts, (void *)fd);
+        CFDictionaryRemoveValue(gRefcounts, (void *)(intptr_t)fd);
     else
-        CFDictionarySetValue(gRefcounts, (void *)fd, (void *)count);
+        CFDictionarySetValue(gRefcounts, (void *)(intptr_t)fd, (void *)(intptr_t)count);
 }
 
 static void Destroy(int fd)
