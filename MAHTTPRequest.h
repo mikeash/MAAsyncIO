@@ -11,12 +11,17 @@
 
 @interface MAHTTPRequest : NSObject {
 @private
-    NSMutableDictionary *_request;
+    NSString *_methodType;
+    NSString *_method;
+    NSInteger _headerLength;
+    NSMutableDictionary *_header;
+    NSData *_content;
 }
 
 - (id)initWithHeader: (NSData *)header;
 
-- (NSDictionary *)request;
+- (NSDictionary *)header;
+- (NSInteger)headerLength;
 
 - (NSString *)method;
 - (NSString *)methodType;

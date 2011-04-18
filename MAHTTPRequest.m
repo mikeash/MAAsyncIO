@@ -15,7 +15,8 @@
 {
     [header retain];
     
-    [_request setObject:[NSNumber numberWithInteger:[header length]] forKey:@"Header-Length"];
+    _headerLength = [header length];
+
     NSString *headerAsString = [[NSString alloc] initWithData: header encoding: NSUTF8StringEncoding];
     NSArray *parts = [headerAsString componentsSeparatedByString: @"\n"];
         
@@ -24,15 +25,15 @@
         if(i == 0)
         {
             NSArray *methodSplit = [[parts objectAtIndex:0] componentsSeparatedByString: @" "];
-            [_request setObject:[methodSplit objectAtIndex:0] forKey:@"Method-Type"];
-            [_request setObject:[methodSplit objectAtIndex:1] forKey:@"Method"];
+            _methodType = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
+            _method = [[NSString alloc] initWithString:[methodSplit objectAtIndex:1]];
         }
         else
         {
             NSArray *partSplit = [[parts objectAtIndex:i] componentsSeparatedByString: @" "];
             NSString *keyPart = [partSplit objectAtIndex:0];
             NSString *key = [keyPart substringToIndex:[keyPart lengthOfBytesUsingEncoding:NSUTF8StringEncoding]-1];
-            [_request setObject:[partSplit objectAtIndex:1] forKey:key];            
+            [_header setObject:[partSplit objectAtIndex:1] forKey:key];            
         }
     }
     
@@ -44,51 +45,59 @@
 {
     if ((self = [super init]))
     {
-        _request = [[NSMutableDictionary alloc] initWithCapacity:0];
+        _header = [[NSMutableDictionary alloc] initWithCapacity:0];
         [self _parseHeader:header];
     }
     
     return self;
 }
 
-- (NSDictionary *)request
+- (NSDictionary *)header
 {
-    return _request;
+    return _header;
+}
+
+- (NSInteger)headerLength
+{
+    return _headerLength;
 }
 
 - (NSString *)method
 {
-    return [_request objectForKey:@"Method"]; 
+    return _method; 
 }
 
 
 - (NSString *)methodType
 {
-    return [_request objectForKey:@"Method-Type"]; 
+    return _methodType; 
 }
 
 - (NSInteger)expectedContentLength
 {
-    if([_request objectForKey:@"Content-Length"])
-        return [[_request objectForKey:@"Content-Length"] integerValue];
+    if([_header objectForKey:@"Content-Length"])
+        return [[_header objectForKey:@"Content-Length"] integerValue];
 
     return 0;
 }
 
 - (void)setContent: (NSData *)data
 {
-    if(data)
-        [_request setObject:data forKey:@"Content"];
+    [_content release];
+    _content = [data copy];
 }
 
 - (NSData *)content
 {
-    return [_request objectForKey:@"Content"];
+    return _content;
 }
 
 - (void)dealloc
 {
-    [_request release];
+    [_methodType release];
+    [_method release];
+    [_content release];
+    [_header release];
     [super dealloc];
 }
 
