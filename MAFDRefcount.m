@@ -54,6 +54,8 @@ int MAFDRetain(int fd)
 
 void MAFDRelease(int fd)
 {
+    Init();
+    
     dispatch_sync(gQueue, ^{
         int count = GetRefcount(fd);
         if(count == 1)

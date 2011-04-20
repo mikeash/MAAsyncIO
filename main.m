@@ -96,6 +96,15 @@ static void WithPipe(void (^block)(MAAsyncReader *reader, MAAsyncWriter *writer)
     block(reader, writer);
 }
 
+static void TestOpenRelease(void)
+{
+    // make sure the FD refcounting stuff can handle a release as its first action
+    // original version of it could not.
+    int fd = open("/dev/null", O_RDONLY);
+    TEST_ASSERT(fd != -1);
+    MAFDRelease(fd);
+}
+
 static void TestDevNull(void)
 {
     for(int i = 0; i < 1000; i++)
@@ -315,6 +324,7 @@ static void TestHTTP(void)
 int main(int argc, const char **argv)
 {
     WithPool(^{
+        TEST(TestOpenRelease);
         TEST(TestDevNull);
         TEST(TestPipe);
         TEST(TestReadToEOF);
