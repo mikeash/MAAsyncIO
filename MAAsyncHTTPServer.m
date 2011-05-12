@@ -43,17 +43,87 @@
 {
     [_listener invalidate];
     [_listener release];
-    [_requestHandler release];
+    [_routes release];
+    
     [super dealloc];
 }
 
-- (void)setRequestHandler: (void (^)(MAHTTPRequest *request, MAAsyncWriter *writer))block
+- (void)start
 {
-    _requestHandler = [block copy];
     __block MAAsyncHTTPServer *weakSelf = self;
     [_listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
         [weakSelf _gotConnection: reader writer: writer];
     }];
+}
+
+- (void)stop
+{
+    [_listener setAcceptCallback:nil];
+}
+
+- (void)setRoutes: (NSDictionary *)dict
+{
+    [_routes autorelease];
+    _routes = [dict copy];
+}
+
+- (void)registerDefaultRoute: (MAAsyncHTTPRequestHandler)block
+{
+    [self registerRoute:block route:DEFAULT_REQUEST_ROUTE];
+    [self start];
+}
+
+- (void)registerRoute: (MAAsyncHTTPRequestHandler)block route:(NSString *)route
+{
+    id localBlock = [block copy];
+    
+    NSMutableDictionary *localRoutes = [NSMutableDictionary dictionaryWithDictionary:_routes];
+    [localRoutes setObject:[localBlock autorelease] forKey:route];
+    
+    [self setRoutes:localRoutes];
+}
+
+- (void)unregisterRoute:(NSString *)route
+{
+    NSMutableDictionary *localRoutes = [NSMutableDictionary dictionaryWithDictionary:_routes];
+
+    [localRoutes removeObjectForKey:route];
+    
+    [self setRoutes:localRoutes];
+}
+
+- (MAAsyncHTTPRequestHandler)registeredRoute:(NSString *)route
+{
+    if([_routes count] > 0)
+    {
+        MAAsyncHTTPRequestHandler handler = [_routes objectForKey:route];
+        
+        if(handler)
+        {
+            return handler;
+        }
+        else
+        {
+            NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
+            NSInteger countIdx = [path count]-1;
+            
+            while (countIdx > 0) 
+            {
+                [path removeLastObject];
+                
+                NSString *shortPath = [path componentsJoinedByString:@"/"];
+                
+                if([_routes objectForKey:shortPath])
+                {
+                    return [_routes objectForKey:shortPath];
+                }
+                
+                countIdx--;
+            }
+        }
+    }
+    
+    return [_routes objectForKey:DEFAULT_REQUEST_ROUTE];
 }
 
 - (int)port
@@ -65,20 +135,25 @@
 {
     [reader readBytes:[request expectedContentLength] callback: ^(NSData *data, BOOL prematureEOF) {
         [request setContent:data];
-        _requestHandler(request, writer);            
+
+        MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request method]];
+        handler(request, writer);
+
         [reader invalidate];
     }];
 }
 
 - (void)_gotConnection: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer
 {
-    [reader readUntilCString: "\r\n\r\n" callback: ^(NSData *data, BOOL prematureEOF) {
+    [reader readUntilCString: HTTP_HEADER_BODY_SEPARATOR callback: ^(NSData *data, BOOL prematureEOF) {
         if(data)
         {            
             MAHTTPRequest *request = [[MAHTTPRequest alloc] initWithHeader:data];
             if([request expectedContentLength] == 0)
             {
-                _requestHandler(request, writer);
+                MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request method]];
+                handler(request, writer); 
+
                 [reader invalidate];
             }
             else
