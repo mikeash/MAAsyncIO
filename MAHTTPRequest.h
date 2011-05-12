@@ -15,6 +15,7 @@
     NSString *_method;
     NSInteger _headerLength;
     NSMutableDictionary *_header;
+    NSMutableDictionary *_formValues;
     NSData *_content;
 }
 
@@ -27,6 +28,9 @@
 - (NSString *)methodType;
 
 - (NSInteger)expectedContentLength;
+
+- (id)formValueForKey: (NSString *)key;
+- (NSDictionary *)formValues;
 
 - (void)setContent: (NSData *)data;
 - (NSData *)content;

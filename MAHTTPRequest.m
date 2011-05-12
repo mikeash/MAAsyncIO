@@ -11,6 +11,55 @@
 
 @implementation MAHTTPRequest
 
+- (void)_parseFormValues: (NSString *)kvps
+{
+    [kvps retain];
+    NSArray *splitKVP = [kvps componentsSeparatedByString: @"&"];
+    
+    for(NSUInteger i = 0; i < [splitKVP count]; i++)
+    {
+        NSString *kvp = [splitKVP objectAtIndex:i];
+        NSScanner *scanner = [[NSScanner alloc] initWithString:kvp];
+        
+        NSString *key = NULL;
+        NSString *value = NULL;
+        if([scanner scanUpToString:@"=" intoString:&key])
+        {	
+            value = [kvp substringFromIndex:[scanner scanLocation]+1];            
+        }
+        
+        [_formValues setObject:value forKey:key];  
+    }    
+    
+    [kvps release];
+}
+
+- (void)_parseMethod: (NSString *)method
+{
+    [method retain];
+    
+    if(![_methodType isEqualToString:@"POST"])
+    {
+        NSArray *splitMethodValues = [method componentsSeparatedByString: @"?"];
+        
+        if([splitMethodValues count] >= 1)
+        {
+            _method = [[splitMethodValues objectAtIndex:0] copy];
+            
+            if([splitMethodValues count] > 1)
+            {
+                [self _parseFormValues:[splitMethodValues objectAtIndex:1]];
+            }
+        }
+    }
+    else
+    {
+        _method = [method copy];
+    }
+    
+    [method release];
+}
+
 - (void)_parseHeader: (NSData *)header
 {
     [header retain];
@@ -26,7 +75,7 @@
         {
             NSArray *methodSplit = [[parts objectAtIndex:0] componentsSeparatedByString: @" "];
             _methodType = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
-            _method = [[NSString alloc] initWithString:[methodSplit objectAtIndex:1]];
+            [self _parseMethod:[methodSplit objectAtIndex:1]];
         }
         else
         {
@@ -46,6 +95,8 @@
     if ((self = [super init]))
     {
         _header = [[NSMutableDictionary alloc] initWithCapacity:0];
+        _formValues = [[NSMutableDictionary alloc] initWithCapacity:0];
+        
         [self _parseHeader:header];
     }
     
@@ -67,6 +118,7 @@
     return _method; 
 }
 
+//https://dev.assignio.de/redirect.aspx?target=AUTH&targetqs=
 
 - (NSString *)methodType
 {
@@ -81,10 +133,27 @@
     return 0;
 }
 
+- (id)formValueForKey: (NSString *)key
+{
+    return [_formValues objectForKey:key];
+}
+
+- (NSDictionary *)formValues
+{
+    return _formValues;
+}
+
 - (void)setContent: (NSData *)data
 {
     [_content release];
     _content = [data copy];
+    
+    if([_methodType isEqualToString:@"POST"] && 
+       [_header objectForKey:@"Content-Type"] && 
+       [[_header objectForKey:@"Content-Type"] isEqualToString:@"application/x-www-form-urlencoded"])
+    {
+        [self _parseFormValues:[NSString stringWithUTF8String:[data bytes]]];
+    }
 }
 
 - (NSData *)content
@@ -94,6 +163,7 @@
 
 - (void)dealloc
 {
+    [_formValues release];
     [_methodType release];
     [_method release];
     [_content release];
