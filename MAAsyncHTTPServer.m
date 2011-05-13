@@ -78,8 +78,9 @@
     id localBlock = [block copy];
     
     NSMutableDictionary *localRoutes = [NSMutableDictionary dictionaryWithDictionary:_routes];
-    [localRoutes setObject:[localBlock autorelease] forKey:route];
+    [localRoutes setObject:localBlock forKey:route];
     
+    [localBlock release];
     [self setRoutes:localRoutes];
 }
 
@@ -107,6 +108,8 @@
             NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
             NSInteger countIdx = [path count]-1;
             
+            MAAsyncHTTPRequestHandler resultHandler = nil;
+            
             while (countIdx > 0) 
             {
                 [path removeLastObject];
@@ -115,11 +118,15 @@
                 
                 if([_routes objectForKey:shortPath])
                 {
-                    return [_routes objectForKey:shortPath];
+                    resultHandler = [_routes objectForKey:shortPath];
+                    break;
                 }
                 
                 countIdx--;
             }
+            
+            [path release];
+            return resultHandler;
         }
     }
     

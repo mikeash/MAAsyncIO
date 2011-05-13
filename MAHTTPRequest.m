@@ -11,6 +11,24 @@
 
 @implementation MAHTTPRequest
 
+- (NSString *)_decodeURL:(NSString *)string
+{
+    [string retain];
+    NSString *result = (NSString *)CFURLCreateStringByReplacingPercentEscapes(kCFAllocatorDefault,
+                                                                              (CFStringRef)string,
+                                                                              CFSTR(""));
+    
+    if(result == NULL)
+    {
+        return [string autorelease];
+    }
+    else
+    {
+        [string release];
+        return [result autorelease];
+    }
+}
+
 - (void)_parseFormValues: (NSString *)kvps
 {
     [kvps retain];
@@ -28,7 +46,15 @@
             value = [kvp substringFromIndex:[scanner scanLocation]+1];            
         }
         
-        [_formValues setObject:value forKey:key];  
+        NSString *decodedKey = [[self _decodeURL:key] retain];
+        NSString *decodedValue = [[self _decodeURL:value] retain];
+        
+        [_formValues setObject:decodedValue forKey:decodedKey];  
+        
+        [decodedKey release];
+        [decodedValue release];
+        
+        [scanner release];
     }    
     
     [kvps release];
@@ -37,7 +63,7 @@
 - (void)_parseMethod: (NSString *)method
 {
     [method retain];
-    
+
     if(![_methodType isEqualToString:@"POST"])
     {
         NSArray *splitMethodValues = [method componentsSeparatedByString: @"?"];
@@ -117,8 +143,6 @@
 {
     return _method; 
 }
-
-//https://dev.assignio.de/redirect.aspx?target=AUTH&targetqs=
 
 - (NSString *)methodType
 {
