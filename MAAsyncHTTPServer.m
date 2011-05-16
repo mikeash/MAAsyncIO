@@ -67,13 +67,13 @@
     _routes = [dict copy];
 }
 
-- (void)registerDefaultRoute: (MAAsyncHTTPRequestHandler)block
+- (void)registerDefaultRouteHandler: (MAAsyncHTTPRequestHandler)block
 {
-    [self registerRoute:block route:DEFAULT_REQUEST_ROUTE];
+    [self registerRoute: DEFAULT_REQUEST_ROUTE handler: block];
     [self start];
 }
 
-- (void)registerRoute: (MAAsyncHTTPRequestHandler)block route:(NSString *)route
+- (void)registerRoute:(NSString *)route handler:(MAAsyncHTTPRequestHandler)block
 {
     id localBlock = [block copy];
     

@@ -25,9 +25,9 @@ typedef void (^MAAsyncHTTPRequestHandler)(MAHTTPRequest *request, MAAsyncWriter 
 
 - (id)initWithPort: (int)port error: (NSError **)error;
 
-- (void)registerDefaultRoute: (void (^)(MAHTTPRequest *request, MAAsyncWriter *writer))block;
+- (void)registerDefaultRouteHandler: (MAAsyncHTTPRequestHandler)block;
+- (void)registerRoute:(NSString *)route handler:(MAAsyncHTTPRequestHandler)block;
 
-- (void)registerRoute: (void (^)(MAHTTPRequest *request, MAAsyncWriter *writer))block route:(NSString *)route;
 - (void)unregisterRoute: (NSString *)route;
 
 - (int)port;

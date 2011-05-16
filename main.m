@@ -304,7 +304,7 @@ static void TestHTTP(void)
     
     NSData *data = [@"testing 1 2 3" dataUsingEncoding: NSUTF8StringEncoding];
     
-    [server registerDefaultRoute: ^(MAHTTPRequest *request, MAAsyncWriter *writer) {
+    [server registerDefaultRouteHandler: ^(MAHTTPRequest *request, MAAsyncWriter *writer) {
         [writer writeData: data];
     }];
     
