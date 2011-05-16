@@ -11,7 +11,7 @@
 
 @interface MAHTTPRequest : NSObject {
 @private
-    NSString *_methodType;
+    NSString *_resource;
     NSString *_method;
     NSInteger _headerLength;
     NSMutableDictionary *_header;
@@ -25,7 +25,7 @@
 - (NSInteger)headerLength;
 
 - (NSString *)method;
-- (NSString *)methodType;
+- (NSString *)resource;
 
 - (NSInteger)expectedContentLength;
 

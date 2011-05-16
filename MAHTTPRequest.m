@@ -64,7 +64,7 @@
 {
     [method retain];
 
-    if(![_methodType isEqualToString:@"POST"])
+    if(![_resource isEqualToString:@"POST"])
     {
         NSArray *splitMethodValues = [method componentsSeparatedByString: @"?"];
         
@@ -100,7 +100,7 @@
         if(i == 0)
         {
             NSArray *methodSplit = [[parts objectAtIndex:0] componentsSeparatedByString: @" "];
-            _methodType = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
+            _resource = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
             [self _parseMethod:[methodSplit objectAtIndex:1]];
         }
         else
@@ -144,9 +144,9 @@
     return _method; 
 }
 
-- (NSString *)methodType
+- (NSString *)resource
 {
-    return _methodType; 
+    return _resource; 
 }
 
 - (NSInteger)expectedContentLength
@@ -172,7 +172,7 @@
     [_content release];
     _content = [data copy];
     
-    if([_methodType isEqualToString:@"POST"] && 
+    if([_resource isEqualToString:@"POST"] && 
        [_header objectForKey:@"Content-Type"] && 
        [[_header objectForKey:@"Content-Type"] isEqualToString:@"application/x-www-form-urlencoded"])
     {
@@ -188,7 +188,7 @@
 - (void)dealloc
 {
     [_formValues release];
-    [_methodType release];
+    [_resource release];
     [_method release];
     [_content release];
     [_header release];
