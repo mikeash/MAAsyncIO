@@ -40,12 +40,16 @@ void MAAsyncSocketConnect(NSData *address, int port, void (^block)(MAAsyncReader
         void (^completion)(void) = ^{
             [source suspend];
             
-            int err;
-            socklen_t len = sizeof(err);
-            getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len);
-            if(err)
+            int so_err, gso_err;
+            socklen_t len = sizeof(so_err);
+            gso_err = getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_err, &len);
+            if(gso_err)
             {
-                block(nil, nil, [NSError errorWithDomain: NSPOSIXErrorDomain code: errno userInfo: nil]);
+                block(nil, nil, [NSError errorWithDomain: NSPOSIXErrorDomain code:gso_err userInfo: nil]);
+            }
+            else if(so_err)
+            {
+                block(nil, nil, [NSError errorWithDomain: NSPOSIXErrorDomain code:so_err userInfo: nil]);
             }
             else
             {
