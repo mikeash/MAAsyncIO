@@ -20,7 +20,8 @@ typedef void (^MAAsyncHTTPRequestHandler)(MAHTTPRequest *request, MAAsyncWriter 
 @interface MAAsyncHTTPServer : NSObject
 {
     MAAsyncSocketListener *_listener;
-    NSDictionary *_routes;
+    NSMutableDictionary *_routes;
+    dispatch_queue_t _routesQueue;
 }
 
 - (id)initWithPort: (int)port error: (NSError **)error;

@@ -30,6 +30,10 @@
             r = NSMakeRange(0, 0);
         
         _listener = [[MAAsyncSocketListener listenerWith4and6WithPortRange: r tryRandom: port <= 0 error: error] retain];
+        
+        _routes = [[NSMutableDictionary alloc] initWithCapacity:1];
+        _routesQueue = dispatch_queue_create([[NSString stringWithFormat:@"com.mikesah.MAAsyncHTTPServer.routesQueue.%i",port] UTF8String], NULL);
+
         if(!_listener)
         {
             [self release];
@@ -41,6 +45,7 @@
 
 - (void)dealloc
 {
+    dispatch_release(_routesQueue);
     [_listener invalidate];
     [_listener release];
     [_routes release];
@@ -48,89 +53,77 @@
     [super dealloc];
 }
 
-- (void)start
+
+- (void)registerDefaultRouteHandler: (MAAsyncHTTPRequestHandler)block
 {
+    [self registerRoute: DEFAULT_REQUEST_ROUTE handler: block];
+    
     __block MAAsyncHTTPServer *weakSelf = self;
     [_listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
         [weakSelf _gotConnection: reader writer: writer];
     }];
 }
 
-- (void)stop
-{
-    [_listener setAcceptCallback:nil];
-}
-
-- (void)setRoutes: (NSDictionary *)dict
-{
-    [_routes autorelease];
-    _routes = [dict copy];
-}
-
-- (void)registerDefaultRouteHandler: (MAAsyncHTTPRequestHandler)block
-{
-    [self registerRoute: DEFAULT_REQUEST_ROUTE handler: block];
-    [self start];
-}
-
 - (void)registerRoute:(NSString *)route handler:(MAAsyncHTTPRequestHandler)block
 {
     id localBlock = [block copy];
-    
-    NSMutableDictionary *localRoutes = [NSMutableDictionary dictionaryWithDictionary:_routes];
-    [localRoutes setObject:localBlock forKey:route];
+
+    dispatch_async(_routesQueue, ^{
+        [_routes setObject:localBlock forKey:route];
+    });
     
     [localBlock release];
-    [self setRoutes:localRoutes];
 }
 
 - (void)unregisterRoute:(NSString *)route
 {
-    NSMutableDictionary *localRoutes = [NSMutableDictionary dictionaryWithDictionary:_routes];
-
-    [localRoutes removeObjectForKey:route];
-    
-    [self setRoutes:localRoutes];
+    dispatch_async(_routesQueue, ^{
+        [_routes removeObjectForKey:route];
+    });
 }
 
 - (MAAsyncHTTPRequestHandler)registeredRoute:(NSString *)route
 {
-    if([_routes count] > 0)
-    {
-        MAAsyncHTTPRequestHandler handler = [_routes objectForKey:route];
+    __block MAAsyncHTTPRequestHandler resultHandler = nil;
         
-        if(handler)
-        {
-            return handler;
-        }
-        else
-        {
-            NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
-            NSInteger countIdx = [path count]-1;
+     dispatch_sync(_routesQueue, ^{
+         if([_routes count] > 0)
+         {
+             resultHandler = [_routes objectForKey:route];
             
-            MAAsyncHTTPRequestHandler resultHandler = nil;
-            
-            while (countIdx > 0) 
-            {
-                [path removeLastObject];
+             if(!resultHandler)
+             {
+                 NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
+                 NSInteger countIdx = [path count]-1;
                 
-                NSString *shortPath = [path componentsJoinedByString:@"/"];
+                 MAAsyncHTTPRequestHandler resultHandler = nil;
                 
-                if([_routes objectForKey:shortPath])
-                {
-                    resultHandler = [_routes objectForKey:shortPath];
-                    break;
-                }
+                 while (countIdx > 0) 
+                 {
+                     [path removeLastObject];
+                    
+                     NSString *shortPath = [path componentsJoinedByString:@"/"];
+                    
+                     if([_routes objectForKey:shortPath])
+                     {
+                         resultHandler = [_routes objectForKey:shortPath];
+                         break;
+                     }
+                    
+                     countIdx--;
+                 }
                 
-                countIdx--;
+                 [path release];
             }
-            
-            [path release];
-            return resultHandler;
         }
-    }
     
-    return [_routes objectForKey:DEFAULT_REQUEST_ROUTE];
+         if(!resultHandler)
+             resultHandler = [_routes objectForKey:DEFAULT_REQUEST_ROUTE];
+ 
+         resultHandler = [resultHandler copy];
+     });
+    
+    return [resultHandler autorelease];
 }
 
 - (int)port
