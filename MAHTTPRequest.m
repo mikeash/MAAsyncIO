@@ -60,17 +60,17 @@
     [kvps release];
 }
 
-- (void)_parseMethod: (NSString *)method
+- (void)_parseResource: (NSString *)resource
 {
-    [method retain];
+    [resource retain];
 
-    if(![_resource isEqualToString:@"POST"])
+    if(![_method isEqualToString:@"POST"])
     {
-        NSArray *splitMethodValues = [method componentsSeparatedByString: @"?"];
+        NSArray *splitMethodValues = [resource componentsSeparatedByString: @"?"];
         
         if([splitMethodValues count] >= 1)
         {
-            _method = [[splitMethodValues objectAtIndex:0] copy];
+            _resource = [[splitMethodValues objectAtIndex:0] copy];
             
             if([splitMethodValues count] > 1)
             {
@@ -80,10 +80,10 @@
     }
     else
     {
-        _method = [method copy];
+        _resource = [resource copy];
     }
     
-    [method release];
+    [resource release];
 }
 
 - (void)_parseHeader: (NSData *)header
@@ -100,8 +100,8 @@
         if(i == 0)
         {
             NSArray *methodSplit = [[parts objectAtIndex:0] componentsSeparatedByString: @" "];
-            _resource = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
-            [self _parseMethod:[methodSplit objectAtIndex:1]];
+            _method = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
+            [self _parseResource:[methodSplit objectAtIndex:1]];
         }
         else
         {
@@ -172,7 +172,7 @@
     [_content release];
     _content = [data copy];
     
-    if([_resource isEqualToString:@"POST"] && 
+    if([_method isEqualToString:@"POST"] && 
        [_header objectForKey:@"Content-Type"] && 
        [[_header objectForKey:@"Content-Type"] isEqualToString:@"application/x-www-form-urlencoded"])
     {

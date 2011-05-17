@@ -143,7 +143,7 @@
     [reader readBytes:[request expectedContentLength] callback: ^(NSData *data, BOOL prematureEOF) {
         [request setContent:data];
 
-        MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request method]];
+        MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request resource]];
         handler(request, writer);
 
         [reader invalidate];
@@ -158,7 +158,7 @@
             MAHTTPRequest *request = [[MAHTTPRequest alloc] initWithHeader:data];
             if([request expectedContentLength] == 0)
             {
-                MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request method]];
+                MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request resource]];
                 handler(request, writer); 
 
                 [reader invalidate];
