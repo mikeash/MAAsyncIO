@@ -11,6 +11,9 @@
 #import "MAAsyncReader.h"
 #import "MAAsyncSocketListener.h"
 
+NSString *const defaultRequestRoute = @"/";
+char *const defaultHTTPHeaderBodySeparator = "\r\n\r\n";
+
 @interface MAAsyncHTTPServer ()
 
 - (void)_gotConnection: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer;
@@ -31,7 +34,11 @@
         
         _listener = [[MAAsyncSocketListener listenerWith4and6WithPortRange: r tryRandom: port <= 0 error: error] retain];
         
-        _routes = [[NSMutableDictionary alloc] initWithCapacity:1];
+//        _routes = [[NSMutableDictionary alloc] initWithCapacity:1];
+        _routes = [[NSMutableArray alloc] initWithCapacity:10];
+        for(NSUInteger i = 0; i<10;i++)
+            [_routes addObject:[NSMutableDictionary dictionaryWithCapacity:1]];
+            
         _routesQueue = dispatch_queue_create([[NSString stringWithFormat:@"com.mikesah.MAAsyncHTTPServer.routesQueue.%i",port] UTF8String], NULL);
 
         if(!_listener)
@@ -56,7 +63,7 @@
 
 - (void)registerDefaultRouteHandler: (MAAsyncHTTPRequestHandler)block
 {
-    [self registerRoute: DEFAULT_REQUEST_ROUTE handler: block];
+    [self registerRoute: defaultRequestRoute method: kMAHTTPNotDefined handler: block];
     
     __block MAAsyncHTTPServer *weakSelf = self;
     [_listener setAcceptCallback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSData *peerAddress) {
@@ -64,61 +71,75 @@
     }];
 }
 
-- (void)registerRoute:(NSString *)route handler:(MAAsyncHTTPRequestHandler)block
+- (void)registerRoute: (NSString *)route method: (MAHTTPMethod)method handler: (MAAsyncHTTPRequestHandler)block
 {
     id localBlock = [block copy];
 
     dispatch_async(_routesQueue, ^{
-        [_routes setObject:localBlock forKey:route];
+        NSMutableDictionary *handlerByRoutes = [[_routes objectAtIndex:method] mutableCopy];
+        [handlerByRoutes setObject:localBlock forKey:route];
+        [_routes replaceObjectAtIndex:method withObject:handlerByRoutes];
+        [handlerByRoutes release];
     });
     
     [localBlock release];
 }
 
-- (void)unregisterRoute:(NSString *)route
+- (void)unregisterRoute: (NSString *)route method: (MAHTTPMethod)method
 {
     dispatch_async(_routesQueue, ^{
-        [_routes removeObjectForKey:route];
+        NSMutableDictionary *handlerByRoutes = [[_routes objectAtIndex:method] mutableCopy];
+        [handlerByRoutes removeObjectForKey:route];
+        [_routes replaceObjectAtIndex:method withObject:handlerByRoutes];
+        [handlerByRoutes release];
     });
 }
 
-- (MAAsyncHTTPRequestHandler)registeredRoute:(NSString *)route
+- (MAAsyncHTTPRequestHandler)registeredRoute:(NSString *)route method: (MAHTTPMethod)method
 {
     __block MAAsyncHTTPRequestHandler resultHandler = nil;
         
      dispatch_sync(_routesQueue, ^{
-         if([_routes count] > 0)
+         
+         if([_routes count] > method)
          {
-             resultHandler = [_routes objectForKey:route];
-            
-             if(!resultHandler)
+             NSMutableDictionary *handlerByRoutes = [[_routes objectAtIndex:method] mutableCopy];
+             
+             if([handlerByRoutes count] > 0)
              {
-                 NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
-                 NSInteger countIdx = [path count]-1;
+                 resultHandler = [handlerByRoutes objectForKey:route];
                 
-                 MAAsyncHTTPRequestHandler resultHandler = nil;
-                
-                 while (countIdx > 0) 
+                 if(!resultHandler)
                  {
-                     [path removeLastObject];
+                     NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
+                     NSInteger countIdx = [path count]-1;
                     
-                     NSString *shortPath = [path componentsJoinedByString:@"/"];
+                     MAAsyncHTTPRequestHandler resultHandler = nil;
                     
-                     if([_routes objectForKey:shortPath])
+                     while (countIdx > 0) 
                      {
-                         resultHandler = [_routes objectForKey:shortPath];
-                         break;
+                         [path removeLastObject];
+                        
+                         NSString *shortPath = [path componentsJoinedByString:@"/"];
+                        
+                         if([handlerByRoutes objectForKey: shortPath])
+                         {
+                             resultHandler = [handlerByRoutes objectForKey: shortPath];
+                             break;
+                         }
+                        
+                         countIdx--;
                      }
                     
-                     countIdx--;
-                 }
-                
-                 [path release];
-            }
-        }
+                     [path release];
+                }                
+             }
+             
+             [handlerByRoutes release];
+         }
     
          if(!resultHandler)
-             resultHandler = [_routes objectForKey:DEFAULT_REQUEST_ROUTE];
+             resultHandler = [[_routes objectAtIndex: kMAHTTPNotDefined] objectForKey: defaultRequestRoute];
  
          resultHandler = [resultHandler copy];
      });
@@ -136,7 +157,7 @@
     [reader readBytes:[request expectedContentLength] callback: ^(NSData *data, BOOL prematureEOF) {
         [request setContent:data];
 
-        MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request resource]];
+        MAAsyncHTTPRequestHandler handler = [self registeredRoute: [request resource] method: [request method]];
         handler(request, writer);
 
         [reader invalidate];
@@ -145,13 +166,13 @@
 
 - (void)_gotConnection: (MAAsyncReader *)reader writer: (MAAsyncWriter *)writer
 {
-    [reader readUntilCString: HTTP_HEADER_BODY_SEPARATOR callback: ^(NSData *data, BOOL prematureEOF) {
+    [reader readUntilCString: defaultHTTPHeaderBodySeparator callback: ^(NSData *data, BOOL prematureEOF) {
         if(data)
         {            
-            MAHTTPRequest *request = [[MAHTTPRequest alloc] initWithHeader:data];
+            MAHTTPRequest *request = [[MAHTTPRequest alloc] initWithHeader: data];
             if([request expectedContentLength] == 0)
             {
-                MAAsyncHTTPRequestHandler handler = [self registeredRoute:[request resource]];
+                MAAsyncHTTPRequestHandler handler = [self registeredRoute: [request resource] method: [request method]];
                 handler(request, writer); 
 
                 [reader invalidate];

@@ -12,24 +12,23 @@
 
 @class MAAsyncSocketListener;
 
-#define DEFAULT_REQUEST_ROUTE @"/"
-#define HTTP_HEADER_BODY_SEPARATOR "\r\n\r\n"
-
+extern NSString *const defaultRequestRoute;
+extern char *const defaultHTTPHeaderBodySeparator;
 typedef void (^MAAsyncHTTPRequestHandler)(MAHTTPRequest *request, MAAsyncWriter *writer);
 
 @interface MAAsyncHTTPServer : NSObject
 {
     MAAsyncSocketListener *_listener;
-    NSMutableDictionary *_routes;
+    NSMutableArray *_routes;
     dispatch_queue_t _routesQueue;
 }
 
 - (id)initWithPort: (int)port error: (NSError **)error;
 
 - (void)registerDefaultRouteHandler: (MAAsyncHTTPRequestHandler)block;
-- (void)registerRoute:(NSString *)route handler:(MAAsyncHTTPRequestHandler)block;
-
-- (void)unregisterRoute: (NSString *)route;
+- (void)registerRoute: (NSString *)route method: (MAHTTPMethod)method handler: (MAAsyncHTTPRequestHandler)block;
+- (void)unregisterRoute: (NSString *)route method: (MAHTTPMethod)method;
+- (MAAsyncHTTPRequestHandler)registeredRoute:(NSString *)route method: (MAHTTPMethod)method;
 
 - (int)port;
 
