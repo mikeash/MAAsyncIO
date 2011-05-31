@@ -107,11 +107,13 @@ char *const defaultHTTPHeaderBodySeparator = "\r\n\r\n";
              
              if([handlerByRoutes count] > 0)
              {
-                 resultHandler = [handlerByRoutes objectForKey:route];
+                 NSString *routeWithoutSuffix = [[route stringByDeletingPathExtension] copy];
+
+                 resultHandler = [handlerByRoutes objectForKey:routeWithoutSuffix];
                 
                  if(!resultHandler)
                  {
-                     NSMutableArray *path = [[route componentsSeparatedByString:@"/"] mutableCopy];
+                     NSMutableArray *path = [[routeWithoutSuffix componentsSeparatedByString:@"/"] mutableCopy];
                      NSInteger countIdx = [path count]-1;
                     
                      MAAsyncHTTPRequestHandler resultHandler = nil;
@@ -132,7 +134,9 @@ char *const defaultHTTPHeaderBodySeparator = "\r\n\r\n";
                      }
                     
                      [path release];
-                }                
+                 } 
+                 
+                 [routeWithoutSuffix release];
              }
              
              [handlerByRoutes release];

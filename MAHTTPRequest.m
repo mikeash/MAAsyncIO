@@ -194,6 +194,11 @@
     return _resource; 
 }
 
+- (NSString *)resourceExtension
+{
+    return [_resource pathExtension];
+}
+
 - (NSInteger)expectedContentLength
 {
     if([_header objectForKey:@"Content-Length"])

@@ -41,6 +41,7 @@ typedef NSUInteger MAHTTPMethod;
 - (NSString *)methodString;
 - (MAHTTPMethod)method;
 - (NSString *)resource;
+- (NSString *)resourceExtension;
 
 - (NSInteger)expectedContentLength;
 
