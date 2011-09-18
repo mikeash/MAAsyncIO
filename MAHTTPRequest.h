@@ -8,13 +8,28 @@
 
 #import <Foundation/Foundation.h>
 
+enum kMAHTTPMethod {
+    kMAHTTPGetMethod,
+    kMAHTTPPostMethod,
+    kMAHTTPPutMethod,
+    kMAHTTPHeadMethod,
+    kMAHTTPDeleteMethod,
+    kMAHTTPTraceMethod,
+    kMAHTTPOptionsMethod,
+    kMAHTTPConnectMethod,
+    kMAHTTPPathMethod,
+    kMAHTTPNotDefined,
+};
+
+typedef NSUInteger MAHTTPMethod;
 
 @interface MAHTTPRequest : NSObject {
 @private
-    NSString *_methodType;
+    NSString *_resource;
     NSString *_method;
     NSInteger _headerLength;
     NSMutableDictionary *_header;
+    NSMutableDictionary *_formValues;
     NSData *_content;
 }
 
@@ -23,10 +38,15 @@
 - (NSDictionary *)header;
 - (NSInteger)headerLength;
 
-- (NSString *)method;
-- (NSString *)methodType;
+- (NSString *)methodString;
+- (MAHTTPMethod)method;
+- (NSString *)resource;
+- (NSString *)resourceExtension;
 
 - (NSInteger)expectedContentLength;
+
+- (id)formValueForKey: (NSString *)key;
+- (NSDictionary *)formValues;
 
 - (void)setContent: (NSData *)data;
 - (NSData *)content;

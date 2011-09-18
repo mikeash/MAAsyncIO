@@ -9,7 +9,100 @@
 #import "MAHTTPRequest.h"
 
 
+/*
+ kMAHTTPGetMethod,
+ kMAHTTPPostMethod,
+ kMAHTTPPutMethod,
+ kMAHTTPHeadMethod,
+ kMAHTTPDeleteMethod,
+ kMAHTTPTraceMethod,
+ kMAHTTPOptionsMethod,
+ kMAHTTPConnectMethod,
+ kMAHTTPPathMethod,
+ kMAHTTPNotDefined,
+ */
 @implementation MAHTTPRequest
+
+- (void)setMethod: (NSString *)method
+{
+    [_method release];
+    _method = [method copy];
+}
+
+- (NSString *)_decodeURL: (NSString *)string
+{
+    [string retain];
+    NSString *result = (NSString *)CFURLCreateStringByReplacingPercentEscapes(kCFAllocatorDefault,
+                                                                              (CFStringRef)string,
+                                                                              CFSTR(""));
+    
+    if(result == NULL)
+    {
+        return [string autorelease];
+    }
+    else
+    {
+        [string release];
+        return [result autorelease];
+    }
+}
+
+- (void)_parseFormValues: (NSString *)kvps
+{
+    [kvps retain];
+    NSArray *splitKVP = [kvps componentsSeparatedByString: @"&"];
+    
+    for(NSUInteger i = 0; i < [splitKVP count]; i++)
+    {
+        NSString *kvp = [splitKVP objectAtIndex:i];
+        NSScanner *scanner = [[NSScanner alloc] initWithString:kvp];
+        
+        NSString *key = NULL;
+        NSString *value = NULL;
+        if([scanner scanUpToString:@"=" intoString:&key])
+        {	
+            value = [kvp substringFromIndex:[scanner scanLocation]+1];            
+        }
+        
+        NSString *decodedKey = [[self _decodeURL:key] retain];
+        NSString *decodedValue = [[self _decodeURL:value] retain];
+        
+        [_formValues setObject:decodedValue forKey:decodedKey];  
+        
+        [decodedKey release];
+        [decodedValue release];
+        
+        [scanner release];
+    }    
+    
+    [kvps release];
+}
+
+- (void)_parseResource: (NSString *)resource
+{
+    [resource retain];
+
+    if([self method] != kMAHTTPPostMethod)
+    {
+        NSArray *splitMethodValues = [resource componentsSeparatedByString: @"?"];
+        
+        if([splitMethodValues count] >= 1)
+        {
+            _resource = [[splitMethodValues objectAtIndex:0] copy];
+            
+            if([splitMethodValues count] > 1)
+            {
+                [self _parseFormValues:[splitMethodValues objectAtIndex:1]];
+            }
+        }
+    }
+    else
+    {
+        _resource = [resource copy];
+    }
+    
+    [resource release];
+}
 
 - (void)_parseHeader: (NSData *)header
 {
@@ -25,8 +118,8 @@
         if(i == 0)
         {
             NSArray *methodSplit = [[parts objectAtIndex:0] componentsSeparatedByString: @" "];
-            _methodType = [[NSString alloc] initWithString:[methodSplit objectAtIndex:0]];
-            _method = [[NSString alloc] initWithString:[methodSplit objectAtIndex:1]];
+            [self setMethod:[methodSplit objectAtIndex:0]];
+            [self _parseResource:[methodSplit objectAtIndex:1]];
         }
         else
         {
@@ -46,6 +139,8 @@
     if ((self = [super init]))
     {
         _header = [[NSMutableDictionary alloc] initWithCapacity:0];
+        _formValues = [[NSMutableDictionary alloc] initWithCapacity:0];
+        
         [self _parseHeader:header];
     }
     
@@ -62,15 +157,46 @@
     return _headerLength;
 }
 
-- (NSString *)method
+- (NSString *)methodString
 {
-    return _method; 
+    return _method;
 }
 
-
-- (NSString *)methodType
+- (MAHTTPMethod)method
 {
-    return _methodType; 
+    if([self methodString])
+    {
+        if([[self methodString] isEqualToString:@"GET"])
+            return kMAHTTPGetMethod;
+        else if([[self methodString] isEqualToString:@"POST"])
+            return kMAHTTPPostMethod;
+        else if([[self methodString] isEqualToString:@"PUT"])
+            return kMAHTTPPutMethod;
+        else if([[self methodString] isEqualToString:@"HEAD"])
+            return kMAHTTPHeadMethod;
+        else if([[self methodString] isEqualToString:@"DELETE"])
+            return kMAHTTPDeleteMethod;
+        else if([[self methodString] isEqualToString:@"TRACE"])
+            return kMAHTTPTraceMethod;
+        else if([[self methodString] isEqualToString:@"OPTIONS"])
+            return kMAHTTPOptionsMethod;
+        else if([[self methodString] isEqualToString:@"CONNECT"])
+            return kMAHTTPConnectMethod;
+        else if([[self methodString] isEqualToString:@"PATH"])
+            return kMAHTTPPathMethod;
+    }
+    
+    return kMAHTTPNotDefined; 
+}
+
+- (NSString *)resource
+{
+    return _resource; 
+}
+
+- (NSString *)resourceExtension
+{
+    return [_resource pathExtension];
 }
 
 - (NSInteger)expectedContentLength
@@ -81,10 +207,27 @@
     return 0;
 }
 
+- (id)formValueForKey: (NSString *)key
+{
+    return [_formValues objectForKey:key];
+}
+
+- (NSDictionary *)formValues
+{
+    return _formValues;
+}
+
 - (void)setContent: (NSData *)data
 {
     [_content release];
     _content = [data copy];
+    
+    if([self method] == kMAHTTPPostMethod && 
+       [_header objectForKey:@"Content-Type"] && 
+       [[_header objectForKey:@"Content-Type"] isEqualToString:@"application/x-www-form-urlencoded"])
+    {
+        [self _parseFormValues:[NSString stringWithUTF8String:[data bytes]]];
+    }
 }
 
 - (NSData *)content
@@ -94,8 +237,9 @@
 
 - (void)dealloc
 {
-    [_methodType release];
+    [_formValues release];
     [_method release];
+    [_resource release];
     [_content release];
     [_header release];
     [super dealloc];
