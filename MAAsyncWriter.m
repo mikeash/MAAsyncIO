@@ -110,6 +110,15 @@
     _eofCallback = nil;
 }
 
+- (void)invalidateWhenEmptyBuffer {
+    dispatch_async([_fdSource queue], ^{
+        if([_buffer length] == 0)
+            [self invalidate];
+        else
+            _invalidateWhenEmptyBuffer = YES;
+    });
+}
+
 - (void)_write
 {
     BOOL emptyBuffer = YES;
@@ -143,7 +152,11 @@
     }
     
     if(emptyBuffer)
+    {
+        if(_invalidateWhenEmptyBuffer)
+            [self invalidate];
         [self release]; // balance the retain in writeData:
+    }
 }
 
 @end

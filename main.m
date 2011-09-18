@@ -166,8 +166,8 @@ static void TestReadToEOF(void)
     WithPipe(^(MAAsyncReader *reader, MAAsyncWriter *writer) {
         char *str = "hello world";
         NSData *data = [NSData dataWithBytes: str length: strlen(str)];
-        [writer setDidWriteCallback: ^ { if([writer bufferSize] == 0) [writer invalidate]; }];
         [writer writeData: data];
+        [writer invalidateWhenEmptyBuffer];
         __block BOOL done = NO;
         [reader readUntilEOFCallback: ^(NSData *indata, BOOL prematureEOF) {
             TEST_ASSERT(prematureEOF);
@@ -221,7 +221,7 @@ static void TestHostMultipleResolution(void)
 static void TestSocketConnect(void)
 {
     __block BOOL done = NO;
-    [[MAAsyncHost hostWithName: @"www.google.com"] connectToPort: 80 callback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
+    [[MAAsyncHost hostWithName: @"localhost"] connectToPort: 12346 callback: ^(MAAsyncReader *reader, MAAsyncWriter *writer, NSError *error) {
         TEST_ASSERT(reader && writer, @"%@", error);
         if(reader && writer)
         {

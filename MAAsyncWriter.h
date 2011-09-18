@@ -21,6 +21,8 @@
     void (^_errorHandler)(int);
     void (^_didWriteCallback)(void);
     void (^_eofCallback)(void);
+    
+    BOOL _invalidateWhenEmptyBuffer;
 }
 
 // initialization
@@ -43,5 +45,6 @@
 
 // stopping
 - (void)invalidate;
+- (void)invalidateWhenEmptyBuffer;
 
 @end
